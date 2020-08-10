@@ -20,9 +20,9 @@
 
 import os
 import re
+import traceback
 import subprocess
 import sys
-import traceback
 from qgis.core import QgsMessageLog, Qgis, QgsSettings
 
 from .modules.utility.pyarchinit_OS_utility import Pyarchinit_OS_Utility
@@ -48,10 +48,9 @@ if not os.path.isfile(confing_path):
 missing_libraries = []
 try:
     import pkg_resources
-
     pkg_resources.require("graphviz==0.8.3")
     import graphviz
-
+    
 except Exception as e:
     missing_libraries.append(str(e))
 
@@ -59,6 +58,7 @@ try:
     import pyper
 except Exception as e:
     missing_libraries.append(str(e))
+
 
 try:
     import sqlalchemy
@@ -96,7 +96,7 @@ try:
     import pandas
 except Exception as e:
     missing_libraries.append(str(e))
-
+    
 install_libraries = []
 for l in missing_libraries:
     p = re.findall(r"'(.*?)'", l)
@@ -105,27 +105,21 @@ for l in missing_libraries:
 if install_libraries:
     from qgis.PyQt.QtWidgets import QMessageBox
 
-    res = QMessageBox.warning(None, 'PyArchInit',
-                              "If you see this message it means some of the required packages are missing from your machine:\n{}\n\n"
-                              "Do you want install the missing packages? Remember you need start QGIS like Admin".format(
-                                  ',\n'.join(missing_libraries)), QMessageBox.Ok | QMessageBox.Cancel)
+    res = QMessageBox.warning(None, 'PyArchInit', "If you see this message it means some of the required packages are missing from your machine:\n{}\n\n"
+                                                  "Do you want install the missing packages? Remember you need start QGIS like Admin".format(
+        ',\n'.join(missing_libraries)), QMessageBox.Ok | QMessageBox.Cancel)
     if res == QMessageBox.Ok:
         import subprocess
 
-        python_path = sys.exec_prefix
-        python_version = sys.version[:3]
-        if Pyarchinit_OS_Utility.isWindows():
-            cmd = '{}/python'.format(python_path)
-        else:
-            cmd = '{}/bin/python{}'.format(python_path, python_version)
         try:
-            subprocess.call(
-                [cmd, '{}'.format(os.path.join(os.path.dirname(__file__), 'scripts', 'modules_installer.py')),
-                 ','.join(install_libraries)], shell=True if Pyarchinit_OS_Utility.isWindows() else False)
+            cmd = 'python3'
+            subprocess.call([cmd,'{}'.format(os.path.join(os.path.dirname(__file__), 'scripts', 'modules_installer.py')),
+                             ','.join(install_libraries)], shell=True if Pyarchinit_OS_Utility.isWindows() else False)
         except Exception as e:
             if Pyarchinit_OS_Utility.isMac():
+                python_version = sys.version[:3]
                 library_path = '/Library/Frameworks/Python.framework/Versions/{}/bin'.format(python_version)
-                cmd = '{}/python{}'.format(library_path, python_version)
+                cmd = '{}/python3'.format(library_path)
                 subprocess.call(
                     [cmd, '{}'.format(os.path.join(os.path.dirname(__file__), 'scripts', 'modules_installer.py')),
                      ','.join(install_libraries)])
@@ -140,30 +134,27 @@ if not Pyarchinit_OS_Utility.checkGraphvizInstallation() and s.value('pyArchInit
     os.environ['PATH'] += os.pathsep + os.path.normpath(s.value('pyArchInit/graphvizBinPath'))
 if not Pyarchinit_OS_Utility.checkRInstallation() and s.value('pyArchInit/rBinPath'):
     os.environ['PATH'] += os.pathsep + os.path.normpath(s.value('pyArchInit/rBinPath'))
-
+if not Pyarchinit_OS_Utility.checkPostgisInstallation() and s.value('pyArchInit/postgisBinPath'):
+    os.environ['PATH'] += os.pathsep + os.path.normpath(s.value('pyArchInit/postgisBinPath'))
 packages = [
-    'PypeR',
-    'graphviz==0.8.3',
-]
+                'PypeR',
+                'graphviz==0.8.3',
+                ]
 for p in packages:
     from qgis.PyQt.QtWidgets import QMessageBox
 
+    
     if p.startswith('PypeR'):
         try:
             subprocess.call(['R', '--version'])
         except Exception as e:
-            QMessageBox.warning(None, 'Pyarchinit',
-                                "INFO: It seems that R is not installed on your system or you don't have set the path in Pyarchinit config. Anyway the pyper module will be installed on your system, but you can not use archaezoology function.",
-                                QMessageBox.Ok | QMessageBox.Cancel)
+            QMessageBox.warning(None, 'Pyarchinit', "INFO: It seems that R is not installed on your system or you don't have set the path in Pyarchinit config. Anyway the pyper module will be installed on your system, but you can not use archaezoology function.", QMessageBox.Ok | QMessageBox.Cancel)
     if p.startswith('graphviz'):
         try:
             subprocess.call(['dot', '-V'])
         except Exception as e:
-            QMessageBox.warning(None, 'Pyarchinit',
-                                "INFO: It seems that Graphviz is not installed on your system or you don't have set the path in Pyarchinit config. Anyway the graphviz python module will be installed on your system, but the export matrix functionality from pyarchinit plugin will be disabled.",
-                                QMessageBox.Ok | QMessageBox.Cancel)
-
-
+            QMessageBox.warning(None, 'Pyarchinit', "INFO: It seems that Graphviz is not installed on your system or you don't have set the path in Pyarchinit config. Anyway the graphviz python module will be installed on your system, but the export matrix functionality from pyarchinit plugin will be disabled.", QMessageBox.Ok | QMessageBox.Cancel)
+                   
 def classFactory(iface):
     from .pyarchinitPlugin import PyArchInitPlugin
     return PyArchInitPlugin(iface)
