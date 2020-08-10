@@ -34,7 +34,6 @@ class Settings(object):
     USER = ""
     THUMB_PATH = ""
     THUMB_RESIZE = ""
-    SITO_SET = ""
     def __init__(self, s):
         self.configuration = eval(s)
 
@@ -47,5 +46,4 @@ class Settings(object):
         self.USER = self.configuration['USER']
         self.THUMB_PATH = self.configuration['THUMB_PATH']
         self.THUMB_RESIZE = self.configuration['THUMB_RESIZE']
-        self.SITO_SET = self.configuration['SITE']
         PLUGIN_PATH = path = os.path.dirname(__file__)
