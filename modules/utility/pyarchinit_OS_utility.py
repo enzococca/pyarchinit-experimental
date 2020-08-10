@@ -70,15 +70,6 @@ class Pyarchinit_OS_Utility(object):
             return False
     
     @staticmethod
-    def checkPostgisInstallation():
-        try:
-            subprocess.call(['pgsql', '--vrsion'])
-            return True
-        except Exception as e:
-            return False
-    
-    
-    @staticmethod
     def checkRInstallation():
         try:
             subprocess.call(['R', '--version'])
