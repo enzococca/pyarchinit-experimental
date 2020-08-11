@@ -779,7 +779,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.fill_fields()
         self.set_sito()
         self.customize_GUI()
-       
+        self.msg_sito()
         self.show()
         self.loadMedialist()
     
@@ -2078,7 +2078,17 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
         responsabile_us_vl.sort()
         self.comboBox_responsabile_us.addItems(responsabile_us_vl)
-
+    
+    def msg_sito(self):
+        conn = Connection()
+        
+        sito_set= conn.sito_set()
+        sito_set_str = sito_set['sito_set']
+        
+        if bool(sito_set_str):
+            QMessageBox.warning(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
+        else:
+            QMessageBox.warning(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record",QMessageBox.Ok) 
     def set_sito(self):
         conn = Connection()
         
@@ -2126,39 +2136,39 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
             self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
 
-            if self.L=='it':
-                if self.REC_TOT == 1:
-                    strings = ("E' stato trovato", self.REC_TOT, "record")
-                #if self.toolButton_draw_siti.isChecked():
-                    #sing_layer = [self.DATA_LIST[self.REC_CORR]]
-                    #self.pyQGIS.charge_sites_from_research(sing_layer)
-                else:
-                    strings = ("Sono stati trovati", self.REC_TOT, "records")
-                    #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)
+            # if self.L=='it':
+                # if self.REC_TOT == 1:
+                    # strings = ("E' stato trovato", self.REC_TOT, "record")
+                # #if self.toolButton_draw_siti.isChecked():
+                    # #sing_layer = [self.DATA_LIST[self.REC_CORR]]
+                    # #self.pyQGIS.charge_sites_from_research(sing_layer)
+                # else:
+                    # strings = ("Sono stati trovati", self.REC_TOT, "records")
+                    # #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)
             
-            elif self.L=='de':
-                if self.REC_TOT == 1:
-                    strings = ("Es wurde gefunden", self.REC_TOT, "record")
-                #if self.toolButton_draw_siti.isChecked():
-                    #sing_layer = [self.DATA_LIST[self.REC_CORR]]
-                    #self.pyQGIS.charge_sites_from_research(sing_layer)
-                else:
-                    strings = ("Sie wurden gefunden", self.REC_TOT, "records")
-                    #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)
+            # elif self.L=='de':
+                # if self.REC_TOT == 1:
+                    # strings = ("Es wurde gefunden", self.REC_TOT, "record")
+                # #if self.toolButton_draw_siti.isChecked():
+                    # #sing_layer = [self.DATA_LIST[self.REC_CORR]]
+                    # #self.pyQGIS.charge_sites_from_research(sing_layer)
+                # else:
+                    # strings = ("Sie wurden gefunden", self.REC_TOT, "records")
+                    # #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)
                     
-            else:
-                if self.REC_TOT == 1:
-                    strings = ("It has been found", self.REC_TOT, "record")
-                #if self.toolButton_draw_siti.isChecked():
-                    #sing_layer = [self.DATA_LIST[self.REC_CORR]]
-                    #self.pyQGIS.charge_sites_from_research(sing_layer)
-                else:
-                    strings = ("They have been found", self.REC_TOT, "records")
-                    #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)      
+            # else:
+                # if self.REC_TOT == 1:
+                    # strings = ("It has been found", self.REC_TOT, "record")
+                # #if self.toolButton_draw_siti.isChecked():
+                    # #sing_layer = [self.DATA_LIST[self.REC_CORR]]
+                    # #self.pyQGIS.charge_sites_from_research(sing_layer)
+                # else:
+                    # strings = ("They have been found", self.REC_TOT, "records")
+                    # #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)      
             self.setComboBoxEnable(["self.comboBox_sito"], "False")
             
 
-            QMessageBox.warning(self, "Message", "%s %d %s" % strings, QMessageBox.Ok)
+            #QMessageBox.warning(self, "Message", "%s %d %s" % strings, QMessageBox.Ok)
     def generate_list_foto(self):
         data_list_foto = []
         

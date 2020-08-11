@@ -825,7 +825,7 @@ class pyarchinit_Site(QDialog, MAIN_DIALOG_CLASS):
         sito_set= conn.sito_set()
         sito_set_str = sito_set['sito_set']
         
-        a = self.SITO.PARAMS_DICT['SITE']
+        
         
         search_dict = {
             'sito': "'" + str(sito_set_str) + "'"}  # 1 - Sito
