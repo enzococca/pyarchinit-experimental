@@ -838,18 +838,18 @@ class pyarchinit_Site(QDialog, MAIN_DIALOG_CLASS):
                 elif self.L=='de':
                     QMessageBox.warning(self, "ACHTUNG", "Keinen Record gefunden!", QMessageBox.Ok)
                 else:
-                    QMessageBox.warning(self, "WARNING," "No record found!", QMessageBox.Ok) 
+                    QMessageBox.warning(self, "WARNING," ,"No record found!", QMessageBox.Ok) 
 
-                self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
-                self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]
+                # self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
+                # self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]
 
-                self.fill_fields(self.REC_CORR)
-                self.BROWSE_STATUS = "b"
-                self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
+                # self.fill_fields(self.REC_CORR)
+                # self.BROWSE_STATUS = "b"
+                # self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
 
-                self.setComboBoxEnable(["self.comboBox_sito"], "False")
-                self.setComboBoxEnable(["self.comboBox_definizione_sito"], "True")
-                self.setComboBoxEnable(["self.textEdit_descrizione_site"], "True")
+                # self.setComboBoxEnable(["self.comboBox_sito"], "False")
+                # self.setComboBoxEnable(["self.comboBox_definizione_sito"], "True")
+                # self.setComboBoxEnable(["self.textEdit_descrizione_site"], "True")
         else:
             self.DATA_LIST = []
             for i in res:
