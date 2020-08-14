@@ -865,11 +865,13 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
     def on_toolButton_active_toggled(self):
         
         if self.toolButton_active.isChecked():
-            QMessageBox.warning(self, "ok", "Sistema query attivato", QMessageBox.Ok)
+            QMessageBox.information(self, "ok", "Sistema query attivato \
+                                                    Seleziona un sito e clicca su salva parametri", QMessageBox.Ok)
             self.charge_list()
         else:
-            QMessageBox.warning(self, "ok", "Sistema query disattivato", QMessageBox.Ok)
             self.comboBox_sito.clear()
+            QMessageBox.information(self, "ok", "Sistema query disattivato", QMessageBox.Ok)
+            
     def charge_list(self):
         
         self.try_connection()
