@@ -9,7 +9,6 @@
     copyright            : (C) 2008 by Luca Mandolesi
     email                : mandoluca at gmail.com
  ***************************************************************************/
-
 /***************************************************************************
  *                                                                          *
  *   This program is free software; you can redistribute it and/or modify   *
@@ -2952,7 +2951,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     self.SORT_STATUS = "n"
                     self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
                     self.enable_button(1)
-                    self.set_sito()
+                    #self.set_sito()
                     self.fill_fields(self.REC_CORR)
                     
                 else:
@@ -3445,29 +3444,22 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         if self.comboBox_per_iniz.currentText() != "" and self.comboBox_fas_iniz.currentText() == "":
             QMessageBox.warning(self, "ATTENZIONE", "Campo Fase iniziale \n Specificare la Fase iniziale oltre al Periodo",  QMessageBox.Ok)
             test = 1
-
         if self.comboBox_per_fin.currentText()  != "" and self.comboBox_fas_fin.currentText() == "":
             QMessageBox.warning(self, "ATTENZIONE", "Campo Fase finale \n Specificare la Fase finale oltre al Periodo",  QMessageBox.Ok)
             test = 1
-
         if self.comboBox_per_iniz.currentText()  == "" and self.comboBox_fas_iniz.currentText() != "":
             QMessageBox.warning(self, "ATTENZIONE", "Campo Periodo iniziale \n Specificare un Periodo iniziale oltre alla Fase",  QMessageBox.Ok)
             test = 1
-
         if self.comboBox_per_fin.currentText()  == "" and self.comboBox_fas_fin.currentText() != "":
             QMessageBox.warning(self, "ATTENZIONE", "Campo Periodo iniziale \n Specificare un Periodo finale oltre alla Fase",  QMessageBox.Ok)
             test = 1
-
         if self.comboBox_per_fin.currentText()  != "" and self.comboBox_fas_fin.currentText() != "" and self.comboBox_per_iniz.currentText()  == "" and self.comboBox_fas_iniz.currentText() == "":
             QMessageBox.warning(self, "ATTENZIONE", "Campi Periodo e Fase iniziali \n Specificare un Periodo e Fase iniziali se si vuole inserire un Periodo e Fase finali",  QMessageBox.Ok)
             test = 1
-
         if self.comboBox_per_fin.currentText()  != "" and self.comboBox_fas_fin.currentText() != "" and self.comboBox_per_iniz.currentText()  == "" and self.comboBox_fas_iniz.currentText() == "":
             QMessageBox.warning(self, "ATTENZIONE", "Campi Periodo e Fase iniziali \n Specificare un Periodo e Fase iniziali se si vuole inserire un Periodo e Fase finali",  QMessageBox.Ok)
             test = 1
-
         if self.comboBox_per_iniz.currentText()  != "" and self.comboBox_fas_iniz.currentText() != "":
-
             search_dict = {
             'sito'  : "'"+str(self.comboBox_sito.currentText())+"'",
             'periodo'  : "'"+str(self.comboBox_per_iniz.currentText())+"'",
@@ -4056,7 +4048,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
 
     def check_record_state(self):
-        self.set_sito()
+        #self.set_sito()
         ec = self.data_error_check()
         if ec == 1:
             return 1  # ci sono errori di immissione
@@ -4098,6 +4090,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         # records surf functions
 
     def on_pushButton_first_rec_pressed(self):
+        
         if self.check_record_state() == 1:
             pass
         else:
@@ -4110,6 +4103,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 pass
 
     def on_pushButton_last_rec_pressed(self):
+        
         if self.check_record_state() == 1:
             pass
         else:
@@ -4124,6 +4118,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
     def on_pushButton_prev_rec_pressed(self):
         rec_goto = int(self.lineEdit_goto.text())
+        
         if self.check_record_state() == 1:
             pass
         else:
@@ -4143,6 +4138,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
     def on_pushButton_next_rec_pressed(self):
         rec_goto = int(self.lineEdit_goto.text())
+        
         if self.check_record_state() == 1:
             pass
         else:
@@ -4154,7 +4150,9 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             try:
                 self.empty_fields()
                 self.fill_fields(self.REC_CORR)
+                
                 self.set_rec_counter(self.REC_TOT, self.REC_CORR + 1)
+                
             except :#Exception as e:
                 pass#QMessageBox.warning(self, "Error", str(e), QMessageBox.Ok)
 
@@ -4192,6 +4190,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                     self.charge_list()
                     self.fill_fields()
+                    self.set_sito()
         elif self.L=='de':
             msg = QMessageBox.warning(self, "Achtung!!!",
                                       "Willst du wirklich diesen Eintrag löschen? \n Der Vorgang ist unumkehrbar",
@@ -4224,6 +4223,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                     self.charge_list()
                     self.fill_fields()
+                    self.set_sito()
         else:
             msg = QMessageBox.warning(self, "Warning!!!",
                                       "Do you really want to break the record? \n Action is irreversible.",
@@ -4256,12 +4256,12 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                     self.charge_list()
                     self.fill_fields()  
-            
+                    self.set_sito()
             
             
             self.SORT_STATUS = "n"
             self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
-            self.set_sito()
+            #
     def on_pushButton_new_search_pressed(self):
         if self.BROWSE_STATUS != "f" and self.check_record_state() == 1:
             pass
