@@ -28,7 +28,8 @@ from sqlalchemy.event import listen
 import platform
 from builtins import range
 from builtins import str
-#import pysftp
+import pandas as pd
+from pandas import DataFrame
 import ftplib
 from ftplib import FTP
 import subprocess
@@ -326,10 +327,19 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         self.PARAMS_DICT['EXPERIMENTAL'] = str(self.comboBox_experimental.currentText())
         self.PARAMS_DICT['SITE_SET'] = str(self.comboBox_sito.currentText())
         self.save_dict()
-        self.try_connection()
-        # QMessageBox.warning(self, "ok", "Per rendere effettive le modifiche e' necessario riavviare Qgis. Grazie.",
-        #                     QMessageBox.Ok)
+        b=str(self.select_version_sql())
+            
+        a = "90313"     
+        
+        if a == b:
+            link = 'https://www.postgresql.org/download/'
+            msg =   "Stai utilizzando la versione di Postgres: " + str(b)+". Tale versione è diventata obsoleta e potresti riscontrare degli errori. Aggiorna PostgreSQL ad una versione più recente. <br><a href='%s'>PostgreSQL</a>" %link
 
+            QMessageBox.information(self, "INFO", msg,QMessageBox.Ok)
+        else:
+            pass
+        self.try_connection()
+        
     def on_pushButton_crea_database_pressed(self,):
         schema_file = os.path.join(os.path.dirname(__file__), os.pardir, 'resources', 'dbfiles',
                                    'pyarchinit_schema_clean.sql')
@@ -403,25 +413,35 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
                     self.on_pushButton_save_pressed()
             else:
                 QMessageBox.warning(self, "INFO", "The DB exist already", QMessageBox.Ok)
-
-
-    def on_pushButton_upd_postgres_pressed(self):
-       
-        view_file = os.path.join(os.path.dirname(__file__), os.pardir, 'resources', 'dbfiles',
-                                   'pyarchinit_update_postgres.sql')
-        
+    def select_version_sql(self):
         conn = Connection()
         db_url = conn.conn_str()
-        #RestoreSchema(db_url,None).update_geom_srid( 'public','%d' % int(self.lineEdit_crs.text()))
-        
-        if RestoreSchema(db_url,view_file).restore_schema()== False:
-            
-            QMessageBox.warning(self, "INFO", "The DB exist already", QMessageBox.Ok)
-        else:
-            QMessageBox.warning(self, "INFO", "Updated", QMessageBox.Ok)
-        
+        sql_query_string = "SELECT current_setting('server_version_num')"
+        self.engine= create_engine(db_url)
+        res = self.engine.execute(sql_query_string)
+        rows= res.fetchone()
+        vers = ''.join(rows)
+        #QMessageBox.information(self, "INFO", str(vers),QMessageBox.Ok)
+        return vers
 
+    def on_pushButton_upd_postgres_pressed(self):
+        conn = Connection()
+        db_url = conn.conn_str()
+        view_file = os.path.join(os.path.dirname(__file__), os.pardir, 'resources', 'dbfiles',
+                                       'pyarchinit_update_postgres.sql')
+       
+        b=str(self.select_version_sql())
+            
+        a = "90313"     
         
+        if a == b:
+            QMessageBox.information(self, "INFO", " Non puoi aggiornare il db postgres per chè la tua versione è inferiore alla 9.4 "
+                                                                            "Aggiorna ad una versione più recente",QMessageBox.Ok)
+        else:
+            RestoreSchema(db_url,view_file).restore_schema()
+            
+            QMessageBox.information(self, "INFO", "il db è stato aggiornato", QMessageBox.Ok)
+       
     def load_spatialite(self,dbapi_conn, connection_record):
         dbapi_conn.enable_load_extension(True)
         
@@ -865,12 +885,11 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
     def on_toolButton_active_toggled(self):
         
         if self.toolButton_active.isChecked():
-            QMessageBox.information(self, "ok", "Sistema query attivato \
-                                                    Seleziona un sito e clicca su salva parametri", QMessageBox.Ok)
+            QMessageBox.information(self, "Pyarchinit", "Sistema query attivato. Seleziona un sito e clicca su salva parametri", QMessageBox.Ok)
             self.charge_list()
         else:
             self.comboBox_sito.clear()
-            QMessageBox.information(self, "ok", "Sistema query disattivato", QMessageBox.Ok)
+            QMessageBox.information(self, "Pyarchinit", "Sistema query disattivato", QMessageBox.Ok)
             
     def charge_list(self):
         
