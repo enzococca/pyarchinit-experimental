@@ -2086,40 +2086,29 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         sito_set_str = sito_set['sito_set']
         
         if bool(sito_set_str):
-            QMessageBox.warning(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
+            QMessageBox.information(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
         else:
-            QMessageBox.warning(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record",QMessageBox.Ok) 
+            QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record",QMessageBox.Ok) 
+    
+    
     def set_sito(self):
         conn = Connection()
-        
+            
         sito_set= conn.sito_set()
         sito_set_str = sito_set['sito_set']
         
+        if bool (sito_set_str):
+            
+            
+        
        
         
-        search_dict = {
-            'sito': "'" + str(sito_set_str) + "'"}  # 1 - Sito
-        u = Utility()
-        search_dict = u.remove_empty_items_fr_dict(search_dict)
-        res = self.DB_MANAGER.query_bool(search_dict, self.MAPPER_TABLE_CLASS)
-        if not bool(res):
-                if self.L=='it':
-                    QMessageBox.warning(self, "ATTENZIONE", "Non è stato trovato nessun record!", QMessageBox.Ok)
-                elif self.L=='de':
-                    QMessageBox.warning(self, "ACHTUNG", "Keinen Record gefunden!", QMessageBox.Ok)
-                else:
-                    QMessageBox.warning(self, "WARNING,", "No record found!", QMessageBox.Ok) 
-
-                # self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
-                # self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]
-                
-                # self.fill_fields(self.REC_CORR)
-                # self.BROWSE_STATUS = "b"
-                # self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
-                
-                # self.setComboBoxEnable(["self.comboBox_sito"], "False")
-                
-        else:
+            search_dict = {
+                'sito': "'" + str(sito_set_str) + "'"}  # 1 - Sito
+            u = Utility()
+            search_dict = u.remove_empty_items_fr_dict(search_dict)
+            res = self.DB_MANAGER.query_bool(search_dict, self.MAPPER_TABLE_CLASS)
+            
             self.DATA_LIST = []
             for i in res:
                 self.DATA_LIST.append(i)
@@ -2132,43 +2121,15 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]  ####darivedere
             self.fill_fields()
             self.BROWSE_STATUS = "b"
-            self.SORT_STATUS = "o"
+            self.SORT_STATUS = "n"
             self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
             self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
 
-            # if self.L=='it':
-                # if self.REC_TOT == 1:
-                    # strings = ("E' stato trovato", self.REC_TOT, "record")
-                # #if self.toolButton_draw_siti.isChecked():
-                    # #sing_layer = [self.DATA_LIST[self.REC_CORR]]
-                    # #self.pyQGIS.charge_sites_from_research(sing_layer)
-                # else:
-                    # strings = ("Sono stati trovati", self.REC_TOT, "records")
-                    # #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)
-            
-            # elif self.L=='de':
-                # if self.REC_TOT == 1:
-                    # strings = ("Es wurde gefunden", self.REC_TOT, "record")
-                # #if self.toolButton_draw_siti.isChecked():
-                    # #sing_layer = [self.DATA_LIST[self.REC_CORR]]
-                    # #self.pyQGIS.charge_sites_from_research(sing_layer)
-                # else:
-                    # strings = ("Sie wurden gefunden", self.REC_TOT, "records")
-                    # #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)
-                    
-            # else:
-                # if self.REC_TOT == 1:
-                    # strings = ("It has been found", self.REC_TOT, "record")
-                # #if self.toolButton_draw_siti.isChecked():
-                    # #sing_layer = [self.DATA_LIST[self.REC_CORR]]
-                    # #self.pyQGIS.charge_sites_from_research(sing_layer)
-                # else:
-                    # strings = ("They have been found", self.REC_TOT, "records")
-                    # #self.pyQGIS.charge_sites_from_research(self.DATA_LIST)      
             self.setComboBoxEnable(["self.comboBox_sito"], "False")
             
-
-            #QMessageBox.warning(self, "Message", "%s %d %s" % strings, QMessageBox.Ok)
+        else:
+            
+            pass#
     def generate_list_foto(self):
         data_list_foto = []
         
@@ -2991,6 +2952,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     self.SORT_STATUS = "n"
                     self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
                     self.enable_button(1)
+                    self.set_sito()
                     self.fill_fields(self.REC_CORR)
                     
                 else:
@@ -3006,15 +2968,16 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 test_insert = self.insert_new_rec()
                 if test_insert == 1:
                     self.empty_fields()
-                    self.SORT_STATUS = "n"
+                    self.SORT_STATUS = "o"
                     self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
                     self.charge_records()
                     self.charge_list()
+                    self.set_sito()
                     self.BROWSE_STATUS = "b"
                     self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
                     self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), len(self.DATA_LIST) - 1
                     self.set_rec_counter(self.REC_TOT, self.REC_CORR + 1)
-
+        
                     self.setComboBoxEditable(["self.comboBox_sito"], 1)
                     self.setComboBoxEditable(["self.comboBox_area"], 1)
                     self.setComboBoxEditable(["self.comboBox_unita_tipo"], 1)
@@ -3023,7 +2986,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     self.setComboBoxEnable(["self.lineEdit_us"], "False")
                     self.setComboBoxEnable(["self.comboBox_unita_tipo"], "False")
                     self.fill_fields(self.REC_CORR)
-                    self.set_sito()
+                    
                     self.enable_button(1)
             else:
                 if self.L=='it':
@@ -4692,6 +4655,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.enable_button_search(1)
         
     def update_if(self, msg):
+        
         rec_corr = self.REC_CORR
         if msg == QMessageBox.Ok:
             test = self.update_record()
@@ -4720,6 +4684,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 return 0
     
     def update_record(self):
+        # self.set_sito()
         try:
             self.DB_MANAGER.update(self.MAPPER_TABLE_CLASS,
                                    self.ID_TABLE,
@@ -5459,7 +5424,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             self.DATA_LIST_REC_CORR.append(eval("unicode(self.DATA_LIST[self.REC_CORR]." + i + ")"))
 
     def records_equal_check(self):
-        self.set_sito()
+        # self.set_sito()
         self.set_LIST_REC_TEMP()
         self.set_LIST_REC_CORR()
 
