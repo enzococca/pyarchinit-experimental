@@ -84,7 +84,8 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         s = QgsSettings()
         self.load_dict()
         self.charge_data()
-        
+        self.db_active()
+        self.comboBox_Database.currentIndexChanged.connect(self.db_active)
         self.comboBox_Database.currentIndexChanged.connect(self.set_db_parameter)
         self.comboBox_server_rd.editTextChanged.connect(self.set_db_import_from_parameter)
         self.comboBox_server_wt.editTextChanged.connect(self.set_db_import_to_parameter)
@@ -126,7 +127,18 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         self.selectorCrsWidget.setCrs(QgsProject.instance().crs())
         self.selectorCrsWidget_sl.setCrs(QgsProject.instance().crs())
     
-    
+    def db_active (self):
+        self.comboBox_Database.update()
+        if self.comboBox_Database.currentText() == 'sqlite':
+            #self.comboBox_Database.editTextChanged.connect(self.set_db_parameter)
+            self.toolButton_db.setEnabled(True)
+            self.pushButton_upd_postgres.setEnabled(False)
+            self.pushButton_upd_sqlite.setEnabled(True)
+        if self.comboBox_Database.currentText() == 'postgres':
+            #self.comboBox_Database.currentIndexChanged.connect(self.set_db_parameter)
+            self.toolButton_db.setEnabled(False)
+            self.pushButton_upd_sqlite.setEnabled(False)
+            self.pushButton_upd_postgres.setEnabled(True)
     def setPathDBsqlite1(self):
         s = QgsSettings()
         dbpath = QFileDialog.getOpenFileName(
@@ -327,15 +339,19 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         self.PARAMS_DICT['EXPERIMENTAL'] = str(self.comboBox_experimental.currentText())
         self.PARAMS_DICT['SITE_SET'] = str(self.comboBox_sito.currentText())
         self.save_dict()
-        b=str(self.select_version_sql())
-            
-        a = "90313"     
         
-        if a == b:
-            link = 'https://www.postgresql.org/download/'
-            msg =   "Stai utilizzando la versione di Postgres: " + str(b)+". Tale versione è diventata obsoleta e potresti riscontrare degli errori. Aggiorna PostgreSQL ad una versione più recente. <br><a href='%s'>PostgreSQL</a>" %link
+        if str(self.comboBox_Database.currentText())=='postgres':
+            b=str(self.select_version_sql())
+                
+            a = "90313"     
+            
+            if a == b:
+                link = 'https://www.postgresql.org/download/'
+                msg =   "Stai utilizzando la versione di Postgres: " + str(b)+". Tale versione è diventata obsoleta e potresti riscontrare degli errori. Aggiorna PostgreSQL ad una versione più recente. <br><a href='%s'>PostgreSQL</a>" %link
 
-            QMessageBox.information(self, "INFO", msg,QMessageBox.Ok)
+                QMessageBox.information(self, "INFO", msg,QMessageBox.Ok)
+            else:
+                pass
         else:
             pass
         self.try_connection()
