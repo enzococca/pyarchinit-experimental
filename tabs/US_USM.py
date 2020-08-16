@@ -2086,8 +2086,9 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         
         if bool(sito_set_str):
             QMessageBox.information(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
-        else:
-            QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record",QMessageBox.Ok) 
+        
+        else:    
+            QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record se il db non è vuoto",QMessageBox.Ok) 
     
     
     def set_sito(self):
