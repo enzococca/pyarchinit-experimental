@@ -1752,31 +1752,6 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.comboBox_sito.addItems(sito_vl)
         self.comboBox_sito_rappcheck.addItems(sito_vl)
         
-        # ra_vl = self.UTILITY.tup_2_list_III(self.DB_MANAGER.group_by('inventario_materiali_table', 'numero_inventario', 'INVENTARIO_MATERIALI'))
-        # try:
-            # ra_vl.remove('')
-        # except Exception as e:
-            # if str(e) == "list.remove(x): x not in list":
-                # pass
-            # else:
-                # if self.L=='it':
-                    # QMessageBox.warning(self, "Messaggio", "Sistema di aggiornamento lista Sito: " + str(e), QMessageBox.Ok)
-                # elif self.L=='en':
-                    # QMessageBox.warning(self, "Message", "Site list update system: " + str(e), QMessageBox.Ok)
-                # elif self.L=='de':
-                    # QMessageBox.warning(self, "Nachricht", "Aktualisierungssystem für die Ausgrabungstätte: " + str(e), QMessageBox.Ok)
-                # else:
-                    # pass
-        # self.comboBox_ref_ra.clear()
-        # self.comboBox_ref_ra_rappcheck.clear()
-
-        # ra_vl.sort()
-        # self.comboBox_ref_ra.addItems(ra_vl)
-        # self.comboBox_ref_ra_rappcheck.addItems(ra_vl)
-        
-        
-        # lista settore
-
         self.comboBox_settore.clear()
         search_dict = {
             'lingua': lang,
@@ -2112,10 +2087,6 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             self.DATA_LIST = []
             for i in res:
                 self.DATA_LIST.append(i)
-
-            ##                  if self.DB_SERVER == 'sqlite':
-            ##                      for i in self.DATA_LIST:
-            ##                          self.DB_MANAGER.update(self.MAPPER_TABLE_CLASS, self.ID_TABLE, [i.id_sito], ['find_check'], [1])
 
             self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), 0
             self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]  ####darivedere

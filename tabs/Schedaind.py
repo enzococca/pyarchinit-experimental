@@ -34,7 +34,7 @@ from ..modules.utility.pdf_models.pyarchinit_exp_Findssheet_pdf import generate_
 from ..modules.utility.pyarchinit_error_check import Error_check
 from ..modules.utility.pyarchinit_exp_Individui_pdf import generate_pdf
 from ..gui.sortpanelmain import SortPanelMain
-
+from ..gui.pyarchinitConfigDialog import pyArchInitDialog_Config
 MAIN_DIALOG_CLASS, _ = loadUiType(os.path.join(os.path.dirname(__file__), os.pardir, 'gui', 'ui', 'Schedaind.ui'))
 
 
@@ -51,6 +51,7 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
     DATA_LIST_REC_TEMP = []
     REC_CORR = 0
     REC_TOT = 0
+    SITO = pyArchInitDialog_Config
     if L=='it':
         STATUS_ITEMS = {"b": "Usa", "f": "Trova", "n": "Nuovo Record"}
     else :
@@ -181,7 +182,9 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
             self.on_pushButton_connect_pressed()
         except Exception as e:
             QMessageBox.warning(self, "Connection System", str(e), QMessageBox.Ok)
-
+        self.fill_fields()
+        self.set_sito()
+        self.msg_sito()
     def enable_button(self, n):
         self.pushButton_connect.setEnabled(n)
 
@@ -307,6 +310,54 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
         sito_vl.sort()
         self.comboBox_sito.addItems(sito_vl)
 
+    def msg_sito(self):
+        conn = Connection()
+        
+        sito_set= conn.sito_set()
+        sito_set_str = sito_set['sito_set']
+        
+        if bool(sito_set_str):
+            QMessageBox.information(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
+        
+        else:    
+            QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record se il db non è vuoto",QMessageBox.Ok) 
+    
+    
+    def set_sito(self):
+        conn = Connection()
+            
+        sito_set= conn.sito_set()
+        sito_set_str = sito_set['sito_set']
+        
+        if bool (sito_set_str):
+            
+            
+        
+       
+        
+            search_dict = {
+                'sito': "'" + str(sito_set_str) + "'"}  # 1 - Sito
+            u = Utility()
+            search_dict = u.remove_empty_items_fr_dict(search_dict)
+            res = self.DB_MANAGER.query_bool(search_dict, self.MAPPER_TABLE_CLASS)
+            
+            self.DATA_LIST = []
+            for i in res:
+                self.DATA_LIST.append(i)
+
+            self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), 0
+            self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]  ####darivedere
+            self.fill_fields()
+            self.BROWSE_STATUS = "b"
+            self.SORT_STATUS = "n"
+            self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
+            self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
+
+            self.setComboBoxEnable(["self.comboBox_sito"], "False")
+            
+        else:
+            
+            pass#
     def charge_periodo_list(self):
         pass
 
@@ -567,6 +618,7 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
                     self.empty_fields()
                     self.label_sort.setText(self.SORTED_ITEMS["n"])
                     self.charge_list()
+                    self.set_sito()
                     self.charge_records()
                     self.BROWSE_STATUS = "b"
                     self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
@@ -960,6 +1012,7 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
                     self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                     self.charge_list()
                     self.fill_fields()
+                    self.set_sito()
         elif self.L=='de':
             msg = QMessageBox.warning(self, "Achtung!!!",
                                       "Willst du wirklich diesen Eintrag löschen? \n Der Vorgang ist unumkehrbar",
@@ -992,6 +1045,7 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
                     self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                     self.charge_list()
                     self.fill_fields()
+                    self.set_sito()
         else:
             msg = QMessageBox.warning(self, "Warning!!!",
                                       "Do you really want to break the record? \n Action is irreversible.",
@@ -1023,7 +1077,8 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
                     self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
                     self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                     self.charge_list()
-                    self.fill_fields()  
+                    self.fill_fields()
+                    self.set_sito()
             
             
             
@@ -1345,8 +1400,8 @@ class pyarchinit_Schedaind(QDialog, MAIN_DIALOG_CLASS):
             str(self.textEdit_osservazioni.setText(self.DATA_LIST[self.rec_num].osservazioni))  # 11 - osservazioni
             if self.toolButtonPreview.isChecked():
                 self.loadMapPreview()
-        except Exception as e:
-            QMessageBox.warning(self, "Error", str(e), QMessageBox.Ok)
+        except :
+            pass#QMessageBox.warning(self, "Error", str(e), QMessageBox.Ok)
 
     def set_rec_counter(self, t, c):
         self.rec_tot = t
