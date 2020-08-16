@@ -328,107 +328,125 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         f.close()
 
     def on_pushButton_save_pressed(self):
-        self.PARAMS_DICT['SERVER'] = str(self.comboBox_Database.currentText())
-        self.PARAMS_DICT['HOST'] = str(self.lineEdit_Host.text())
-        self.PARAMS_DICT['DATABASE'] = str(self.lineEdit_DBname.text())
-        self.PARAMS_DICT['PASSWORD'] = str(self.lineEdit_Password.text())
-        self.PARAMS_DICT['PORT'] = str(self.lineEdit_Port.text())
-        self.PARAMS_DICT['USER'] = str(self.lineEdit_User.text())
-        self.PARAMS_DICT['THUMB_PATH'] = str(self.lineEdit_Thumb_path.text())
-        self.PARAMS_DICT['THUMB_RESIZE'] = str(self.lineEdit_Thumb_resize.text())
-        self.PARAMS_DICT['EXPERIMENTAL'] = str(self.comboBox_experimental.currentText())
-        self.PARAMS_DICT['SITE_SET'] = str(self.comboBox_sito.currentText())
-        self.save_dict()
-        
-        if str(self.comboBox_Database.currentText())=='postgres':
-            b=str(self.select_version_sql())
-                
-            a = "90313"     
-            
-            if a == b:
-                link = 'https://www.postgresql.org/download/'
-                msg =   "Stai utilizzando la versione di Postgres: " + str(b)+". Tale versione è diventata obsoleta e potresti riscontrare degli errori. Aggiorna PostgreSQL ad una versione più recente. <br><a href='%s'>PostgreSQL</a>" %link
-
-                QMessageBox.information(self, "INFO", msg,QMessageBox.Ok)
+        try:
+            if not bool(self.lineEdit_Password.text()) and str(self.comboBox_Database.currentText())=='postgres':
+                QMessageBox.warning(self, "INFO", 'non dimenticarti di inserire la password',QMessageBox.Ok)
             else:
-                pass
-        else:
-            pass
-        self.try_connection()
-        
+                self.PARAMS_DICT['SERVER'] = str(self.comboBox_Database.currentText())
+                self.PARAMS_DICT['HOST'] = str(self.lineEdit_Host.text())
+                self.PARAMS_DICT['DATABASE'] = str(self.lineEdit_DBname.text())
+                self.PARAMS_DICT['PASSWORD'] = str(self.lineEdit_Password.text())
+                self.PARAMS_DICT['PORT'] = str(self.lineEdit_Port.text())
+                self.PARAMS_DICT['USER'] = str(self.lineEdit_User.text())
+                self.PARAMS_DICT['THUMB_PATH'] = str(self.lineEdit_Thumb_path.text())
+                self.PARAMS_DICT['THUMB_RESIZE'] = str(self.lineEdit_Thumb_resize.text())
+                self.PARAMS_DICT['EXPERIMENTAL'] = str(self.comboBox_experimental.currentText())
+                self.PARAMS_DICT['SITE_SET'] = str(self.comboBox_sito.currentText())
+                
+                self.save_dict()
+               
+                if str(self.comboBox_Database.currentText())=='postgres':
+                    
+                    
+                    b=str(self.select_version_sql())
+                        
+                    a = "90313"     
+                    
+                    if a == b:
+                        link = 'https://www.postgresql.org/download/'
+                        msg =   "Stai utilizzando la versione di Postgres: " + str(b)+". Tale versione è diventata obsoleta e potresti riscontrare degli errori. Aggiorna PostgreSQL ad una versione più recente. <br><a href='%s'>PostgreSQL</a>" %link
+
+                        QMessageBox.information(self, "INFO", msg,QMessageBox.Ok)
+                    else:
+                        pass
+                else:
+                    pass
+            
+            
+                self.try_connection()
+            
+        except Exception as e:
+            QMessageBox.warning(self, "INFO", "Problema di connessione al db. Controlla i paramatri inseriti", QMessageBox.Ok)
     def on_pushButton_crea_database_pressed(self,):
         schema_file = os.path.join(os.path.dirname(__file__), os.pardir, 'resources', 'dbfiles',
                                    'pyarchinit_schema_clean.sql')
         view_file = os.path.join(os.path.dirname(__file__), os.pardir, 'resources', 'dbfiles',
                                    'create_view.sql')
-        create_database = CreateDatabase(self.lineEdit_dbname.text(), self.lineEdit_db_host.text(),
-                                         self.lineEdit_port_db.text(), self.lineEdit_db_user.text(),
-                                         self.lineEdit_db_passwd.text())
-
-        ok, db_url = create_database.createdb()
-
-        if ok:
-            try:
-                RestoreSchema(db_url, schema_file).restore_schema()
-            except Exception as e:
-                DropDatabase(db_url).dropdb()
-                ok = False
-                raise e
-
-        if ok:
-            crsid = self.selectorCrsWidget.crs().authid()
-            srid = crsid.split(':')[1]
-
-            res = RestoreSchema(db_url).update_geom_srid('public', srid)
-
-            # create views
-            RestoreSchema(db_url, view_file).restore_schema()
-            #set owner
-            if self.lineEdit_db_user.text() != 'postgres':
-                RestoreSchema(db_url).set_owner(self.lineEdit_db_user.text())
-
-        if self.L=='it':
-            if ok and res:
-                msg = QMessageBox.warning(self, 'INFO', 'Installazione avvenuta con successo, vuoi connetterti al nuovo DB?',
-                                          QMessageBox.Ok | QMessageBox.Cancel)
-                if msg == QMessageBox.Ok:
-                    self.comboBox_Database.setCurrentText('postgres')
-                    self.lineEdit_Host.setText(self.lineEdit_db_host.text())
-                    self.lineEdit_DBname.setText(self.lineEdit_dbname.text())
-                    self.lineEdit_Port.setText(self.lineEdit_port_db.text())
-                    self.lineEdit_User.setText(self.lineEdit_db_user.text())
-                    self.lineEdit_Password.setText(self.lineEdit_db_passwd.text())
-                    self.on_pushButton_save_pressed()
-            else:
-                QMessageBox.warning(self, "INFO", "Database esistente", QMessageBox.Ok)
-        elif self.L=='de':
-            if ok and res:
-                msg = QMessageBox.warning(self, 'INFO', 'Erfolgreiche Installation, möchten Sie sich mit der neuen Datenbank verbinden?',
-                                          QMessageBox.Ok | QMessageBox.Cancel)
-                if msg == QMessageBox.Ok:
-                    self.comboBox_Database.setCurrentText('postgres')
-                    self.lineEdit_Host.setText(self.lineEdit_db_host.text())
-                    self.lineEdit_DBname.setText(self.lineEdit_dbname.text())
-                    self.lineEdit_Port.setText(self.lineEdit_port_db.text())
-                    self.lineEdit_User.setText(self.lineEdit_db_user.text())
-                    self.lineEdit_Password.setText(self.lineEdit_db_passwd.text())
-                    self.on_pushButton_save_pressed()
-            else:
-                QMessageBox.warning(self, "INFO", "die Datenbank existiert", QMessageBox.Ok)
+        
+        if not bool(self.lineEdit_db_passwd.text()):
+            QMessageBox.warning(self, "INFO", "Non dimenticarti di inserire la password", QMessageBox.Ok)
         else:
-            if ok and res:
-                msg = QMessageBox.warning(self, 'INFO', 'Successful installation, do you want to connect to the new DB?',
-                                          QMessageBox.Ok | QMessageBox.Cancel)
-                if msg == QMessageBox.Ok:
-                    self.comboBox_Database.setCurrentText('postgres')
-                    self.lineEdit_Host.setText(self.lineEdit_db_host.text())
-                    self.lineEdit_DBname.setText(self.lineEdit_dbname.text())
-                    self.lineEdit_Port.setText(self.lineEdit_port_db.text())
-                    self.lineEdit_User.setText(self.lineEdit_db_user.text())
-                    self.lineEdit_Password.setText(self.lineEdit_db_passwd.text())
-                    self.on_pushButton_save_pressed()
+            
+            create_database = CreateDatabase(self.lineEdit_dbname.text(), self.lineEdit_db_host.text(),
+                                             self.lineEdit_port_db.text(), self.lineEdit_db_user.text(),
+                                             self.lineEdit_db_passwd.text())
+            
+            ok, db_url = create_database.createdb()
+        
+        
+            if ok:    
+                try:
+                    RestoreSchema(db_url, schema_file).restore_schema()
+                except Exception as e:
+                    QMessageBox.warning(self, "INFO", "Devi essere superutente per creare un db. Vedi l'errore seguente", QMessageBox.Ok)
+                    DropDatabase(db_url).dropdb()
+                    ok = False
+                    raise e
+
+            if ok:
+                crsid = self.selectorCrsWidget.crs().authid()
+                srid = crsid.split(':')[1]
+
+                res = RestoreSchema(db_url).update_geom_srid('public', srid)
+
+                # create views
+                RestoreSchema(db_url, view_file).restore_schema()
+                #set owner
+                if self.lineEdit_db_user.text() != 'postgres':
+                    RestoreSchema(db_url).set_owner(self.lineEdit_db_user.text())
+
+            if self.L=='it':
+                if ok and res:
+                    msg = QMessageBox.warning(self, 'INFO', 'Installazione avvenuta con successo, vuoi connetterti al nuovo DB?',
+                                              QMessageBox.Ok | QMessageBox.Cancel)
+                    if msg == QMessageBox.Ok:
+                        self.comboBox_Database.setCurrentText('postgres')
+                        self.lineEdit_Host.setText(self.lineEdit_db_host.text())
+                        self.lineEdit_DBname.setText(self.lineEdit_dbname.text())
+                        self.lineEdit_Port.setText(self.lineEdit_port_db.text())
+                        self.lineEdit_User.setText(self.lineEdit_db_user.text())
+                        self.lineEdit_Password.setText(self.lineEdit_db_passwd.text())
+                        self.on_pushButton_save_pressed()
+                else:
+                    QMessageBox.warning(self, "INFO", "Database esistente", QMessageBox.Ok)
+            elif self.L=='de':
+                if ok and res:
+                    msg = QMessageBox.warning(self, 'INFO', 'Erfolgreiche Installation, möchten Sie sich mit der neuen Datenbank verbinden?',
+                                              QMessageBox.Ok | QMessageBox.Cancel)
+                    if msg == QMessageBox.Ok:
+                        self.comboBox_Database.setCurrentText('postgres')
+                        self.lineEdit_Host.setText(self.lineEdit_db_host.text())
+                        self.lineEdit_DBname.setText(self.lineEdit_dbname.text())
+                        self.lineEdit_Port.setText(self.lineEdit_port_db.text())
+                        self.lineEdit_User.setText(self.lineEdit_db_user.text())
+                        self.lineEdit_Password.setText(self.lineEdit_db_passwd.text())
+                        self.on_pushButton_save_pressed()
+                else:
+                    QMessageBox.warning(self, "INFO", "die Datenbank existiert", QMessageBox.Ok)
             else:
-                QMessageBox.warning(self, "INFO", "The DB exist already", QMessageBox.Ok)
+                if ok and res:
+                    msg = QMessageBox.warning(self, 'INFO', 'Successful installation, do you want to connect to the new DB?',
+                                              QMessageBox.Ok | QMessageBox.Cancel)
+                    if msg == QMessageBox.Ok:
+                        self.comboBox_Database.setCurrentText('postgres')
+                        self.lineEdit_Host.setText(self.lineEdit_db_host.text())
+                        self.lineEdit_DBname.setText(self.lineEdit_dbname.text())
+                        self.lineEdit_Port.setText(self.lineEdit_port_db.text())
+                        self.lineEdit_User.setText(self.lineEdit_db_user.text())
+                        self.lineEdit_Password.setText(self.lineEdit_db_passwd.text())
+                        self.on_pushButton_save_pressed()
+                else:
+                    QMessageBox.warning(self, "INFO", "The DB exist already", QMessageBox.Ok)
     def select_version_sql(self):
         conn = Connection()
         db_url = conn.conn_str()
@@ -846,6 +864,7 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         
         test = self.DB_MANAGER.connection()
         #self.charge_list()
+        
         if self.L=='it':
             if test:
                 QMessageBox.warning(self, "Messaggio", "Connessione avvenuta con successo", QMessageBox.Ok)
