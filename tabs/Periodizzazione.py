@@ -230,8 +230,8 @@ class pyarchinit_Periodizzazione(QDialog, MAIN_DIALOG_CLASS):
                 self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
                 self.label_sort.setText(self.SORTED_ITEMS["n"])
                 self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
+                #self.charge_list()
                 self.charge_list()
-                self.charge_list_sito()
                 self.fill_fields()
             else:
                 if self.L=='it':
@@ -245,8 +245,8 @@ class pyarchinit_Periodizzazione(QDialog, MAIN_DIALOG_CLASS):
                 else:
                     QMessageBox.warning(self,"WELCOME", "Welcome in pyArchInit" + "individual form" + ". The DB is empty. Push 'Ok' and Good Work!",
                                         QMessageBox.Ok)
-                self.charge_list_sito()
                 self.charge_list()
+                #self.charge_list()
                 self.BROWSE_STATUS = 'x'
                 self.on_pushButton_new_rec_pressed()
         except Exception as e:
@@ -277,11 +277,11 @@ class pyarchinit_Periodizzazione(QDialog, MAIN_DIALOG_CLASS):
                     msg = "Warning bug detected! Report it to the developer. Error: ".format(str(e))
                     self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)   
 
-    def charge_list(self):
+    def charge_list_sito(self):
 
         pass
 
-    def charge_list_sito(self):
+    def charge_list(self):
         sito_vl = self.UTILITY.tup_2_list_III(self.DB_MANAGER.group_by('site_table', 'sito', 'SITE'))
         try:
             sito_vl.remove('')
