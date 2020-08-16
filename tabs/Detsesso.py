@@ -25,8 +25,10 @@ import os
 
 from builtins import range
 from builtins import str
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox,QTableWidgetItem
 from qgis.PyQt.uic import loadUiType
+from qgis.core import QgsSettings, Qgis
 from qgis.gui import QgsMapToolPan
 
 from ..modules.db.pyarchinit_conn_strings import Connection
@@ -40,6 +42,7 @@ MAIN_DIALOG_CLASS, _ = loadUiType(os.path.join(os.path.dirname(__file__), os.par
 
 
 class pyarchinit_Detsesso(QDialog, MAIN_DIALOG_CLASS):
+    L=QgsSettings().value("locale/userLocale")[0:2]
     MSG_BOX_TITLE = "PyArchInit - pyarchinit_US_version 0.4 - Scheda Determinazione sesso"
     DATA_LIST = []
     DATA_LIST_REC_CORR = []
@@ -289,12 +292,13 @@ class pyarchinit_Detsesso(QDialog, MAIN_DIALOG_CLASS):
         self.pushButton_sort.setEnabled(n)
 
     def on_pushButton_connect_pressed(self):
-        QMessageBox.warning(self, "Alert", "Sistema sperimentale solo per lo sviluppo", QMessageBox.Ok)
         conn = Connection()
         conn_str = conn.conn_str()
         test_conn = conn_str.find('sqlite')
+
         if test_conn == 0:
             self.DB_SERVER = "sqlite"
+
         try:
             self.DB_MANAGER = Pyarchinit_db_management(conn_str)
             self.DB_MANAGER.connection()
@@ -310,22 +314,47 @@ class pyarchinit_Detsesso(QDialog, MAIN_DIALOG_CLASS):
                 self.charge_list()
                 self.fill_fields()
             else:
-                QMessageBox.warning(self, "BENVENUTO",
-                                    "Benvenuto in pyArchInit" + self.NOME_SCHEDA + ". Il database e' vuoto. Premi 'Ok' e buon lavoro!",
-                                    QMessageBox.Ok)
+                if self.L=='it':
+                    QMessageBox.warning(self,"BENVENUTO", "Benvenuto in pyArchInit" + "Scheda Campioni" + ". Il database e' vuoto. Premi 'Ok' e buon lavoro!",
+                                        QMessageBox.Ok)
+                
+                elif self.L=='de':
+                    
+                    QMessageBox.warning(self,"WILLKOMMEN","WILLKOMMEN in pyArchInit" + "Munsterformular"+ ". Die Datenbank ist leer. Tippe 'Ok' und aufgehts!",
+                                        QMessageBox.Ok) 
+                else:
+                    QMessageBox.warning(self,"WELCOME", "Welcome in pyArchInit" + "Samples form" + ". The DB is empty. Push 'Ok' and Good Work!",
+                                        QMessageBox.Ok)
                 self.charge_list()
                 self.BROWSE_STATUS = 'x'
                 self.on_pushButton_new_rec_pressed()
         except Exception as e:
             e = str(e)
             if e.find("no such table"):
-                QMessageBox.warning(self, "Alert",
-                                    "La connessione e' fallita <br><br> Tabella non presente. E' NECESSARIO RIAVVIARE QGIS" + str(
-                                        e), QMessageBox.Ok)
+                if self.L=='it':
+                    msg = "La connessione e' fallita {}. " \
+                          "E' NECESSARIO RIAVVIARE QGIS oppure rilevato bug! Segnalarlo allo sviluppatore".format(str(e))
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)
+                
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)
+                elif self.L=='de':
+                    msg = "Verbindungsfehler {}. " \
+                          " QGIS neustarten oder es wurde ein bug gefunden! Fehler einsenden".format(str(e))
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)
+                else:
+                    msg = "The connection failed {}. " \
+                          "You MUST RESTART QGIS or bug detected! Report it to the developer".format(str(e))        
             else:
-                QMessageBox.warning(self, "Alert",
-                                    "Attenzione rilevato bug! Segnalarlo allo sviluppatore<br> Errore: <br>" + str(e),
-                                    QMessageBox.Ok)
+                if self.L=='it':
+                    msg = "Attenzione rilevato bug! Segnalarlo allo sviluppatore. Errore: ".format(str(e))
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)
+                
+                elif self.L=='de':
+                    msg = "ACHTUNG. Es wurde ein bug gefunden! Fehler einsenden: ".format(str(e))
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)  
+                else:
+                    msg = "Warning bug detected! Report it to the developer. Error: ".format(str(e))
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)   
 
     def customize_GUI(self):
         pass

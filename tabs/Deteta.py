@@ -25,10 +25,11 @@ import os
 
 from builtins import range
 from builtins import str
+from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox
 from qgis.PyQt.uic import loadUiType
 from qgis.gui import QgsMapToolPan
-from qgis.core import QgsSettings
+from qgis.core import QgsSettings, Qgis
 from ..modules.db.pyarchinit_conn_strings import Connection
 from ..modules.db.pyarchinit_db_manager import Pyarchinit_db_management
 from ..modules.db.pyarchinit_utility import Utility
@@ -65,7 +66,7 @@ class pyarchinit_Deteta(QDialog, MAIN_DIALOG_CLASS):
     else:
         SORTED_ITEMS = {"n": "Not sorted", "o": "Sorted"}
     SORT_MODE = 'asc'
-    
+    SORT_STATUS = "n"
     
     UTILITY = Utility()
     DB_MANAGER = ""
@@ -737,11 +738,11 @@ class pyarchinit_Deteta(QDialog, MAIN_DIALOG_CLASS):
     def on_pushButton_connect_pressed(self):
         conn = Connection()
         conn_str = conn.conn_str()
-
         test_conn = conn_str.find('sqlite')
 
         if test_conn == 0:
             self.DB_SERVER = "sqlite"
+
         try:
             self.DB_MANAGER = Pyarchinit_db_management(conn_str)
             self.DB_MANAGER.connection()
@@ -767,9 +768,9 @@ class pyarchinit_Deteta(QDialog, MAIN_DIALOG_CLASS):
                                         QMessageBox.Ok) 
                 else:
                     QMessageBox.warning(self,"WELCOME", "Welcome in pyArchInit" + "Samples form" + ". The DB is empty. Push 'Ok' and Good Work!",
-                                        QMessageBox.Ok)   
-                self.BROWSE_STATUS = 'x'
+                                        QMessageBox.Ok)
                 self.charge_list()
+                self.BROWSE_STATUS = 'x'
                 self.on_pushButton_new_rec_pressed()
         except Exception as e:
             e = str(e)
@@ -797,7 +798,7 @@ class pyarchinit_Deteta(QDialog, MAIN_DIALOG_CLASS):
                     self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)  
                 else:
                     msg = "Warning bug detected! Report it to the developer. Error: ".format(str(e))
-                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)    
+                    self.iface.messageBar().pushMessage(self.tr(msg), Qgis.Warning, 0)       
 
     def customize_GUI(self):
         query_res = self.sex_from_individuo_table()
