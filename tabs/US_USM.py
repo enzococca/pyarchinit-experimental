@@ -776,9 +776,10 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.charge_struttura_list()
         self.empty_fields()
         self.fill_fields()
-        self.set_sito()
+        
         self.customize_GUI()
         self.msg_sito()
+        self.set_sito()
         self.show()
         self.loadMedialist()
     
@@ -1240,6 +1241,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
                 self.charge_list()
                 self.fill_fields()
+                
             else:
                 
                 if self.L=='it':
@@ -2059,9 +2061,12 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         sito_set= conn.sito_set()
         sito_set_str = sito_set['sito_set']
         
-        if bool(sito_set_str):
+        if self.comboBox_sito.currentText()==sito_set_str:
             QMessageBox.information(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
         
+        
+        #elif sito_set_str==self.comboBox_sito()
+            
         else:    
             QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record se il db non è vuoto",QMessageBox.Ok) 
     
@@ -2072,35 +2077,39 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         sito_set= conn.sito_set()
         sito_set_str = sito_set['sito_set']
         
-        if bool (sito_set_str):
+        try:
+            if bool (sito_set_str):
+                
+                
             
+           
             
-        
-       
-        
-            search_dict = {
-                'sito': "'" + str(sito_set_str) + "'"}  # 1 - Sito
-            u = Utility()
-            search_dict = u.remove_empty_items_fr_dict(search_dict)
-            res = self.DB_MANAGER.query_bool(search_dict, self.MAPPER_TABLE_CLASS)
-            
-            self.DATA_LIST = []
-            for i in res:
-                self.DATA_LIST.append(i)
+                search_dict = {
+                    'sito': "'" + str(sito_set_str) + "'"}  # 1 - Sito
+                u = Utility()
+                search_dict = u.remove_empty_items_fr_dict(search_dict)
+                res = self.DB_MANAGER.query_bool(search_dict, self.MAPPER_TABLE_CLASS)
+                
+                self.DATA_LIST = []
+                for i in res:
+                    self.DATA_LIST.append(i)
 
-            self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), 0
-            self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]  ####darivedere
-            self.fill_fields()
-            self.BROWSE_STATUS = "b"
-            self.SORT_STATUS = "n"
-            self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
-            self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
+                self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), 0
+                self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]  ####darivedere
+                self.fill_fields()
+                self.BROWSE_STATUS = "b"
+                self.SORT_STATUS = "n"
+                self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
+                self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
 
-            self.setComboBoxEnable(["self.comboBox_sito"], "False")
-            
-        else:
-            
-            pass#
+                self.setComboBoxEnable(["self.comboBox_sito"], "False")
+                
+            else:
+                
+                pass#
+                
+        except:
+            QMessageBox.information(self, "Attenzione" ,"Non esiste questo sito: "'"'+ str(sito_set_str) +'"'" in questa scheda, Per favore distattiva la 'scelta sito' dalla scheda di configurazione plugin per vedere tutti i record oppure scegli un sito esistente e riprova",QMessageBox.Ok) 
     def generate_list_foto(self):
         data_list_foto = []
         
