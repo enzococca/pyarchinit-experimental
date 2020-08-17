@@ -235,7 +235,7 @@ class pyarchinit_Periodizzazione(QDialog, MAIN_DIALOG_CLASS):
                 self.fill_fields()
             else:
                 if self.L=='it':
-                    QMessageBox.warning(self,"BENVENUTO", "Benvenuto in pyArchInit" + "Scheda individui" + ". Il database e' vuoto. Premi 'Ok' e buon lavoro!",
+                    QMessageBox.warning(self,"BENVENUTO", "Benvenuto in pyArchInit " + self.NOME_SCHEDA + ". Il database e' vuoto. Premi 'Ok' e buon lavoro!",
                                         QMessageBox.Ok)
                 
                 elif self.L=='de':
@@ -296,14 +296,11 @@ class pyarchinit_Periodizzazione(QDialog, MAIN_DIALOG_CLASS):
         sito_set= conn.sito_set()
         sito_set_str = sito_set['sito_set']
         
-        if self.comboBox_sito.currentText()==sito_set_str:
+        if bool(self.comboBox_sito.currentText()) and self.comboBox_sito.currentText()==sito_set_str:
             QMessageBox.information(self, "OK" ,"Sei connesso al sito: %s" % str(sito_set_str),QMessageBox.Ok) 
-        
-        
-        #elif sito_set_str==self.comboBox_sito()
-            
-        else:    
-            QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record se il db non è vuoto",QMessageBox.Ok) 
+       
+        elif sito_set_str=='':    
+            QMessageBox.information(self, "Attenzione" ,"Non hai settato alcun sito pertanto vedrai tutti i record se il db non è vuoto",QMessageBox.Ok)  
     
     
     def set_sito(self):
@@ -344,7 +341,7 @@ class pyarchinit_Periodizzazione(QDialog, MAIN_DIALOG_CLASS):
                 pass#
                 
         except:
-            QMessageBox.information(self, "Attenzione" ,"Non esiste questo sito: "'"'+ str(sito_set_str) +'"'" in questa scheda, Per favore distattiva la 'scelta sito' dalla scheda di configurazione plugin per vedere tutti i record oppure scegli un sito esistente e riprova",QMessageBox.Ok) 
+            QMessageBox.information(self, "Attenzione" ,"Non esiste questo sito: "'"'+ str(sito_set_str) +'"'" in questa scheda, Per favore distattiva la 'scelta sito' dalla scheda di configurazione plugin per vedere tutti i record oppure crea la scheda",QMessageBox.Ok) 
     def on_pushButton_pdf_scheda_exp_pressed(self):
         if self.L=='it':    
             Periodizzazione_pdf_sheet = generate_Periodizzazione_pdf()
