@@ -40,7 +40,9 @@ if not packages:
         'graphviz==0.8.3',
         'pysftp',
         'xlsxwriter',
-        'pandas'
+        'pandas',
+        'ffmpeg',
+        'opencv-python'
     ]
 python_path = sys.exec_prefix
 python_version = sys.version[:3]
