@@ -96,7 +96,14 @@ try:
     import pandas
 except Exception as e:
     missing_libraries.append(str(e))
-
+try:
+    import ffmpeg
+except Exception as e:
+    missing_libraries.append(str(e))
+try:
+    import cv2
+except Exception as e:
+    missing_libraries.append(str(e))    
 install_libraries = []
 for l in missing_libraries:
     p = re.findall(r"'(.*?)'", l)
