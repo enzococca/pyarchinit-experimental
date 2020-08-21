@@ -27,7 +27,7 @@ from builtins import str
 import PIL as Image
 from PIL import *
 import shutil
-import ffmpeg
+#import ffmpeg
 import cv2
 import numpy as np
 from qgis import PyQt
@@ -474,9 +474,26 @@ class Main(QDialog,MAIN_DIALOG_CLASS):
                     filenamev, filetypev = video.split(".")[0], video.split(".")[1]  # db definisce nome immagine originale
                     filepathv = directory + '/' + filenamev + "." + filetypev  # db definisce il path immagine originale
                     idunique_video_check = self.db_search_check(self.MAPPER_TABLE_CLASS, 'filepath', filepathv)
+                    
+                    vcap = cv2.VideoCapture(filepathv)
+                    res, im_ar = vcap.read()
+                    while im_ar.mean() < 1 and res:
+                          res, im_ar = vcap.read()
+                    im_ar = cv2.resize(im_ar, (100, 100), 0, 0, cv2.INTER_LINEAR)
+                    #to save we have two options
                     outputfile='{}.png'.format(directory + '/' + filenamev)
-                    infile=ffmpeg.input(filepathv,ss='00:00:4').output(outputfile,vframes=1).overwrite_output()
-                    ffmpeg.run(infile)                                            
+                    cv2.imwrite(outputfile, im_ar)
+                    # #2)save on a buffer for direct transmission
+                    # res, thumb_buf = cv2.imencode('.jpeg', im_ar)
+                    # # '.jpeg' etc are permitted
+                    # #get the bytes content
+                    # bt = thumb_buf.tostring()
+                    
+                    
+                    
+                    # outputfile='{}.png'.format(directory + '/' + filenamev)
+                    # infile=ffmpeg.input(filepathv,ss='00:00:4').output(outputfile,vframes=1).overwrite_output()
+                    # ffmpeg.run(infile)                                            
             
                 if not bool(idunique_video_check):
                     mediatype = 'video'  # db definisce il tipo di immagine originale
