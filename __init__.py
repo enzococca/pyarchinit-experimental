@@ -101,7 +101,7 @@ try:
 except Exception as e:
     missing_libraries.append(str(e))
 try:
-    import cv2
+    import opencv-python
 except Exception as e:
     missing_libraries.append(str(e))    
 install_libraries = []
