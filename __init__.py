@@ -100,10 +100,10 @@ try:
     import ffmpeg
 except Exception as e:
     missing_libraries.append(str(e))
-try:
-    import opencv-python
-except Exception as e:
-    missing_libraries.append(str(e))    
+# try:
+    # import "opencv-python"
+# except Exception as e:
+    # missing_libraries.append(str(e))    
 install_libraries = []
 for l in missing_libraries:
     p = re.findall(r"'(.*?)'", l)
