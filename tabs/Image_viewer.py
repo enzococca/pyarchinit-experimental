@@ -835,7 +835,7 @@ class Main(QDialog,MAIN_DIALOG_CLASS):
         eval(cmd)    
     def openWide_image(self):
         items = self.iconListWidget.selectedItems()
-        #conn = Connection()
+        conn = Connection()
         conn_str = conn.conn_str()
         thumb_resize = conn.thumb_resize()
         thumb_resize_str = thumb_resize['thumb_resize']

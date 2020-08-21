@@ -28,6 +28,7 @@ from sqlite3 import Error
 import os
 import platform
 from datetime import date
+import cv2
 from qgis.PyQt.QtCore import Qt, QSize, pyqtSlot, QVariant, QLocale
 from qgis.PyQt.QtGui import QColor, QIcon
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QListWidget, QListView, QFrame, QAbstractItemView, \
@@ -1699,27 +1700,58 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
     def openWide_image(self):
         items = self.iconListWidget.selectedItems()
         conn = Connection()
-        
+        conn_str = conn.conn_str()
         thumb_resize = conn.thumb_resize()
         thumb_resize_str = thumb_resize['thumb_resize']
         for item in items:
-            dlg = ImageViewer(self)
+            dlg = ImageViewer()
             id_orig_item = item.text()  # return the name of original file
-
-            search_dict = {'media_filename': "'" + str(id_orig_item) + "'"}
-
+            search_dict = {'media_filename': "'" + str(id_orig_item) + "'" , 'mediatype': "'" + 'video' + "'"} 
             u = Utility()
             search_dict = u.remove_empty_items_fr_dict(search_dict)
-
-            try:
-                res = self.DB_MANAGER.query_bool(search_dict, "MEDIA_THUMB")
-                file_path = str(res[0].path_resize)
-            except Exception as e:
-                QMessageBox.warning(self, "Error", "Warning 1 file: " + str(e), QMessageBox.Ok)
-
-            dlg.show_image(thumb_resize_str+file_path)
-            #item.data(QtCore.Qt.UserRole).toString()))
-            dlg.exec_()
+            #try:
+            res = self.DB_MANAGER.query_bool(search_dict, "MEDIA_THUMB")
+            
+            
+            search_dict_2 = {'media_filename': "'" + str(id_orig_item) + "'" , 'mediatype': "'" + 'image' + "'"}  
+            
+            search_dict_2 = u.remove_empty_items_fr_dict(search_dict_2)
+            #try:
+            res_2 = self.DB_MANAGER.query_bool(search_dict_2, "MEDIA_THUMB")
+            
+            search_dict_3 = {'media_filename': "'" + str(id_orig_item) + "'"}  
+            
+            search_dict_3 = u.remove_empty_items_fr_dict(search_dict_3)
+            #try:
+            res_3 = self.DB_MANAGER.query_bool(search_dict_3, "MEDIA_THUMB")
+            
+            # file_path = str(res[0].path_resize)
+            # file_path_2 = str(res_2[0].path_resize)
+            file_path_3 = str(res_3[0].path_resize)
+            if bool(res):
+            
+                #except Exception as e:
+                #    QMessageBox.warning(self, "Error", "Warning 1 file: "+ str(e),  QMessageBox.Ok)
+                
+                capture = cv2.VideoCapture(str(thumb_resize_str+file_path_3))
+                print (" Error Opening Video")
+                
+                #ret, frame = cap.read()
+                while(capture.isOpened()):
+                    ret, frame = capture.read()
+                    if bool(ret):
+                   
+                        cv2.imshow('Frame',frame)
+                        if cv2.waitKey(25) & 0xFF == ord('q') :
+                       
+                            break
+                    else:
+                        break#cv2.imshow('frame',frame)
+                capture.release()
+                cv2.destroyAllWindows()
+            elif bool(res_2):
+                dlg.show_image(str(thumb_resize_str+file_path_3))  
+                dlg.exec_()
 
     def charge_list(self):
 
