@@ -93,17 +93,19 @@ try:
 except Exception as e:
     missing_libraries.append(str(e))
 try:
+    import pkg_resources
+
+    pkg_resources.require("opencv-python")
+    import cv2 
+except Exception as e:
+    missing_libraries.append(str(e))    
+
+try:
     import pandas
 except Exception as e:
     missing_libraries.append(str(e))
-try:
-    import ffmpeg
-except Exception as e:
-    missing_libraries.append(str(e))
-try:
-    import cv2
-except Exception as e:
-    missing_libraries.append(str(e))    
+
+
 
 install_libraries = []
 for l in missing_libraries:
@@ -148,8 +150,7 @@ if not Pyarchinit_OS_Utility.checkGraphvizInstallation() and s.value('pyArchInit
     os.environ['PATH'] += os.pathsep + os.path.normpath(s.value('pyArchInit/graphvizBinPath'))
 if not Pyarchinit_OS_Utility.checkRInstallation() and s.value('pyArchInit/rBinPath'):
     os.environ['PATH'] += os.pathsep + os.path.normpath(s.value('pyArchInit/rBinPath'))
-if not Pyarchinit_OS_Utility.checkFInstallation() and s.value('pyArchInit/fBinPath'):
-    os.environ['PATH'] += os.pathsep + os.path.normpath(s.value('pyArchInit/fBinPath'))    
+
 
 packages = [
     'PypeR',
@@ -173,13 +174,7 @@ for p in packages:
                                 "INFO: It seems that Graphviz is not installed on your system or you don't have set the path in Pyarchinit config. Anyway the graphviz python module will be installed on your system, but the export matrix functionality from pyarchinit plugin will be disabled.",
                                 QMessageBox.Ok | QMessageBox.Cancel)
 
-    if p.startswith('ffmpeg'):
-        try:
-            subprocess.call(['ffmpeg', '-V'])
-        except Exception as e:
-            QMessageBox.warning(None, 'Pyarchinit',
-                                "INFO: It seems that ffmpeg is not installed on your system or you don't have set the path in Pyarchinit config. Anyway the graphviz python module will be installed on your system, but the export matrix functionality from pyarchinit plugin will be disabled.",
-                                QMessageBox.Ok | QMessageBox.Cancel)
+    
 def classFactory(iface):
     from .pyarchinitPlugin import PyArchInitPlugin
     return PyArchInitPlugin(iface)
