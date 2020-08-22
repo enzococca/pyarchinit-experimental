@@ -77,13 +77,7 @@ class Pyarchinit_OS_Utility(object):
         except Exception as e:
             return False
     
-    @staticmethod
-    def checkFInstallation():
-        try:
-            subprocess.call(['ffmpeg', '-V'])
-            return True
-        except Exception as e:
-            return False
+    
     @staticmethod
     def isWindows():
         return os.name == 'nt'
