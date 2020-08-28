@@ -29,14 +29,14 @@ import os
 import platform
 from datetime import date
 import cv2
-from qgis.PyQt.QtCore import Qt, QSize, pyqtSlot, QVariant, QLocale
+from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import QColor, QIcon
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QListWidget, QListView, QFrame, QAbstractItemView, \
-    QTableWidgetItem, QListWidgetItem,QTableWidget
+from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.uic import loadUiType
 from qgis.core import Qgis, QgsSettings
 from qgis.gui import QgsMapCanvas, QgsMapToolPan
-
+from qgis.PyQt.QtSql import QSqlDatabase, QSqlTableModel
+import re
 from .Interactive_matrix import pyarchinit_Interactive_Matrix
 from ..modules.utility.pyarchinit_OS_utility import Pyarchinit_OS_Utility
 from ..modules.db.pyarchinit_conn_strings import Connection
@@ -48,6 +48,7 @@ from ..modules.utility.pyarchinit_error_check import Error_check
 from ..modules.utility.pyarchinit_exp_Periodosheet_pdf import generate_US_pdf
 from ..modules.utility.pyarchinit_exp_USsheet_pdf import generate_US_pdf
 from ..modules.utility.pyarchinit_print_utility import Print_utility
+from ..modules.utility.settings import Settings
 from ..searchLayers import SearchLayers
 from ..gui.imageViewer import ImageViewer
 from ..gui.sortpanelmain import SortPanelMain
@@ -740,6 +741,8 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
     DB_SERVER = "not defined"  ####nuovo sistema sort
     
+
+ 
     def __init__(self, iface):
         super().__init__()
         
@@ -764,6 +767,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.comboBox_sito.currentIndexChanged.connect(self.charge_struttura_list)
         self.comboBox_per_iniz.editTextChanged.connect(self.charge_fase_iniz_list)
         self.comboBox_per_iniz.currentIndexChanged.connect(self.charge_fase_iniz_list)
+        self.search_1.textChanged.connect(self.update_filter)
         
         self.comboBox_per_fin.editTextChanged.connect(self.charge_fase_fin_list)
         self.comboBox_per_fin.currentIndexChanged.connect(self.charge_fase_fin_list)
@@ -782,9 +786,126 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.msg_sito()
         self.set_sito()
         self.show()
-        self.loadMedialist()
+        #self.loadMedialist()
+        conn = Connection()
+        conn_str = conn.conn_str()
+        conn_sqlite = conn.databasename()
+        conn_user = conn.datauser()
+        conn_host = conn.datahost()
+        conn_port = conn.dataport()
+        port_int  = conn_port["port"]
+        port_int.replace("'", "")
+        #QMessageBox.warning(self, "Attenzione", port_int, QMessageBox.Ok)
+        conn_password = conn.datapassword()
+        
+        
+        sito_set= conn.sito_set()
+        sito_set_str = sito_set['sito_set']
+        
+        test_conn = conn_str.find('sqlite')
+        if test_conn == 0:
+            sqlite_DB_path = '{}{}{}'.format(self.HOME, os.sep,
+                                           "pyarchinit_DB_folder") 
+            db1 = QSqlDatabase("QSQLITE") 
+            db1.setDatabaseName(sqlite_DB_path +os.sep+ conn_sqlite["db_name"])
+            db1.open()
+            #self.table = QTableView() 
+            self.model = QSqlTableModel(db = db1) 
+            self.table.setModel(self.model) 
+            self.model.setTable("us_table") 
+            column_titles = { 
+                "sito": "SITO", 
+                "area": "Area", 
+                "us": "US"} 
+            for n, t in column_titles.items(): 
+                idx = self.model.fieldIndex( n) 
+                self.model.setHeaderData( idx, Qt.Horizontal, t)
+
+            #self.model.removeColumns(0,1 and 2,3)
+            # columns_to_remove = ['id_us'] 
+            # for cn in columns_to_remove: 
+                # idx = self.model.fieldIndex(cn) 
+                # self.model.removeColumns(idx, 1)
+            if bool (sito_set_str):
+                filter_str = "sito = '{}'".format(str(self.comboBox_sito.currentText())) 
+                self.model.setFilter(filter_str)
+                self.model.select() 
+            else:
+            
+                self.model.select() 
+               
+        else:
+           
+            db = QSqlDatabase.addDatabase("QPSQL")
+            db.setHostName(conn_host["host"])
+                        
+            db.setDatabaseName(conn_sqlite["db_name"])
+            db.setPort(int(port_int))
+            db.setUserName(conn_user['user'])
+            db.setPassword(conn_password['password']) 
+            db.open()
+            
+            
+                
+            self.model_a = QSqlTableModel(db = db) 
+           
+            self.table.setModel(self.model_a) 
+            self.model_a.setTable("us_table")
+            
+            if bool (sito_set_str):
+                filter_str = "sito = '{}'".format(str(self.comboBox_sito.currentText())) 
+                self.model_a.setFilter(filter_str)
+                self.model_a.select() 
+            else:
+                self.model_a.select() 
+            
+            
+               
+        
+    def update_filter(self, s): 
+        conn = Connection()
+        conn_str = conn.conn_str()    
+        sito_set= conn.sito_set()
+        sito_set_str = sito_set['sito_set']
+        test_conn = conn_str.find('sqlite')
+        if test_conn == 0:
+            try:
+                if bool(sito_set_str):
+            
+                    s_field = self.field.currentText()
+                    s = re.sub("[\W_] +", "", s)
+                    filter_str = "{} LIKE '%{}%' and sito = '{}'".format(s_field,s,str(self.comboBox_sito.currentText())) 
+                    self.model.setFilter(filter_str)
+                    
+                else:
+                    s_field = self.field.currentText()
+                    s = re.sub("[\W_] +", "", s)
+                    filter_str = "{} LIKE '%{}%'".format(s_field,s) 
+                    self.model.setFilter(filter_str)
+                
+            except Exception as e:
+                QMessageBox.warning(self, "Attenzione", str(e), QMessageBox.Ok)
+                
+        elif test_conn != 0:
+            try:
+                if bool(sito_set_str):
+            
+                    s_field = self.field.currentText()
+                    s = re.sub("[\W_] +", "", s)
+                    filter_str = "{} LIKE '%{}%' and sito = '{}'".format(s_field,s,str(self.comboBox_sito.currentText())) 
+                    self.model_a.setFilter(filter_str)
+                    
+                else:
+                    s_field = self.field.currentText()
+                    s = re.sub("[\W_] +", "", s)
+                    filter_str = "{} LIKE '%{}%'".format(s_field,s) 
+                    self.model_a.setFilter(filter_str)
+                
+            except Exception as e:
+                QMessageBox.warning(self, "Attenzione", str(e), QMessageBox.Ok)
+        
     
-    def on_pushButton_globalsearch_pressed(self):
+    def on_pushButton_globalsearch_pressed(self):#395.684 800900 
         self.search.showSearchDialog()    
     def charge_struttura_list(self):
         sito = str(self.comboBox_sito.currentText())
@@ -1069,17 +1190,23 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             QMessageBox.warning(self, "Warning", "If you changed the record and didn't save it, you'll lose the record. Do you want save it?", QMessageBox.Ok | QMessageBox.Cancel)
         
         try:
-            table_name = "self.tableWidget_foto"
-            rowSelected_cmd = ("%s.selectedIndexes()") % (table_name)
-            rowSelected = eval(rowSelected_cmd)
-            rowIndex = (rowSelected[0].row())
+            #table_name = "self.table"
+            #rowSelected_cmd = ("%s.selectedIndexes()") % (table_name)
+            rowSelected = self.table.currentIndex()#eval(rowSelected_cmd)
+            rowIndex = rowSelected.row()
 
             sito = str(self.comboBox_sito.currentText())
             area = str(self.comboBox_area.currentText())
-            us_item = self.tableWidget_foto.item(rowIndex, 2)
-
-            us = str(us_item.text())
-
+            #us = str(self.lineEdit_us.text())
+            
+            us_item = self.table.model().index(rowIndex,3)
+            #for i in us_item:
+                
+            
+            us = self.table.model().data(us_item)
+            f = open("C:\\Users\\Utente\\data_insert_list.txt", "w")
+            f.write(str(us))
+            f.close
             search_dict = {'sito': "'" + str(sito) + "'",
                            'area': "'" + str(area) + "'",
                            'us': us}
@@ -1089,60 +1216,19 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
             res = self.DB_MANAGER.query_bool(search_dict, self.MAPPER_TABLE_CLASS)
             
-            if not bool(res):
+            
+            self.empty_fields()
+            self.DATA_LIST = []
+            for i in res:
+                self.DATA_LIST.append(i)
+            self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), 0
+            self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]
+            self.fill_fields()
+            self.BROWSE_STATUS = "b"
+            self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
+            self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
+
                 
-                if self.L=='it':
-                    QMessageBox.warning(self, "ATTENZIONE", "Non e' stato trovato alcun record!", QMessageBox.Ok)
-                elif self.L=='de':
-                    QMessageBox.warning(self, "ACHTUNG", "kein Eintrag gefunden!", QMessageBox.Ok)
-                else:
-                    QMessageBox.warning(self, "Warning", "The record has not been found ", QMessageBox.Ok)
-                self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
-                self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]
-                self.fill_fields(self.REC_CORR)
-                self.BROWSE_STATUS = "b"
-                self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
-
-                self.setComboBoxEnable(["self.comboBox_sito"], "False")
-                self.setComboBoxEnable(["self.comboBox_area"], "False")
-                self.setComboBoxEnable(["self.lineEdit_us"], "False")
-            else:
-                self.empty_fields()
-                self.DATA_LIST = []
-                for i in res:
-                    self.DATA_LIST.append(i)
-                self.REC_TOT, self.REC_CORR = len(self.DATA_LIST), 0
-                self.DATA_LIST_REC_TEMP = self.DATA_LIST_REC_CORR = self.DATA_LIST[0]
-                self.fill_fields()
-                self.BROWSE_STATUS = "b"
-                self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
-                self.set_rec_counter(len(self.DATA_LIST), self.REC_CORR + 1)
-
-                if self.REC_TOT == 1:
-                    
-                    
-                    if self.L=='it':
-                        strings = ("E' stato trovato", self.REC_TOT, "record")
-                    elif self.L=='de':
-                        strings = ("Es wurde gefunden", self.REC_TOT, "record")
-                    else:
-                        strings = ("has been found", self.REC_TOT, "record")
-                    if self.toolButtonGis.isChecked():
-                        self.pyQGIS.charge_vector_layers(self.DATA_LIST)
-                else:
-                    
-                    if self.L=='it':
-                        strings = ("Sono stati trovati", self.REC_TOT, "records")
-                    elif self.L=='de':
-                        strings = ("Sie wurden gefunden", self.REC_TOT, "records")
-                    else:
-                        strings = ("Have been found", self.REC_TOT, "records")
-                    if self.toolButtonGis.isChecked():
-                        self.pyQGIS.charge_vector_layers(self.DATA_LIST)
-
-                self.setComboBoxEnable(["self.comboBox_sito"], "False")
-                self.setComboBoxEnable(["self.comboBox_area"], "False")
-                self.setComboBoxEnable(["self.lineEdit_us"], "False")
         except Exception as e:
             e = str(e)
             if self.L=='it':
@@ -1156,7 +1242,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                                 QMessageBox.Ok)  
     
     
-    
+        
     def enable_button(self, n):
         # self.pushButton_connect.setEnabled(n)
 
@@ -1228,6 +1314,14 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         test_conn = conn_str.find('sqlite')
         if test_conn == 0:
             self.DB_SERVER = "sqlite"
+            
+            db = QSqlDatabase("QSQLITE") 
+            db.setDatabaseName(conn_str) 
+            db.open()
+        else:
+            db = QSqlDatabase("QPSQL") 
+            db.setDatabaseName(conn_str) 
+            db.open()
         try:
             self.DB_MANAGER = Pyarchinit_db_management(conn_str)
             self.DB_MANAGER.connection()
@@ -1303,11 +1397,11 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.tableWidget_rapporti.setColumnWidth(1, 110)
         self.tableWidget_documentazione.setColumnWidth(0, 150)
         self.tableWidget_documentazione.setColumnWidth(1, 300)
-        self.tableWidget_foto.setColumnWidth(0, 100)
-        self.tableWidget_foto.setColumnWidth(1, 100)
-        self.tableWidget_foto.setColumnWidth(2, 100)
-        self.tableWidget_foto.setColumnWidth(3, 100)
-        self.tableWidget_foto.setColumnWidth(4, 200)
+        # self.tableWidget_foto.setColumnWidth(0, 100)
+        # self.tableWidget_foto.setColumnWidth(1, 100)
+        # self.tableWidget_foto.setColumnWidth(2, 100)
+        # self.tableWidget_foto.setColumnWidth(3, 100)
+        # self.tableWidget_foto.setColumnWidth(4, 200)
         
         self.mapPreview = QgsMapCanvas(self)
         self.mapPreview.setCanvasColor(QColor(225, 225, 225))
@@ -1596,37 +1690,37 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.delegateINCL.def_editable('False')
         self.tableWidget_inclusi.setItemDelegateForColumn(0, self.delegateINCL)
 
-    def loadMedialist(self):
-        self.tableWidget_foto.clear()
-        col =['Sito','Area','US','Definizione']
-        self.tableWidget_foto.setHorizontalHeaderLabels(col)
-        numRows = self.tableWidget_foto.setRowCount(100)
-        try: 
-            search_dict = {
-                'sito': "'" + str(eval("self.DATA_LIST[int(self.REC_CORR)]. " + self.ID_SITO)) + "'"}
-            record_us_list = self.DB_MANAGER.query_bool(search_dict, 'US')
-            nus=0
-            for b in record_us_list:
-                if nus== 0:
-                    self.tableWidget_foto.setItem(nus, 0, QTableWidgetItem(str(b.sito)))
+    # def loadMedialist(self):
+        # self.tableWidget_foto.clear()
+        # col =['Sito','Area','US','Definizione']
+        # self.tableWidget_foto.setHorizontalHeaderLabels(col)
+        # numRows = self.tableWidget_foto.setRowCount(100)
+        # try: 
+            # search_dict = {
+                # 'sito': "'" + str(eval("self.DATA_LIST[int(self.REC_CORR)]. " + self.ID_SITO)) + "'"}
+            # record_us_list = self.DB_MANAGER.query_bool(search_dict, 'US')
+            # nus=0
+            # for b in record_us_list:
+                # if nus== 0:
+                    # self.tableWidget_foto.setItem(nus, 0, QTableWidgetItem(str(b.sito)))
                     
-                    self.tableWidget_foto.setItem(nus, 1, QTableWidgetItem(str(b.area)))
+                    # self.tableWidget_foto.setItem(nus, 1, QTableWidgetItem(str(b.area)))
                     
-                    self.tableWidget_foto.setItem(nus, 3, QTableWidgetItem(str(b.d_stratigrafica)))
+                    # self.tableWidget_foto.setItem(nus, 3, QTableWidgetItem(str(b.d_stratigrafica)))
                     
-                    self.tableWidget_foto.setItem(nus, 2, QTableWidgetItem(str(b.us)))    
-                    nus+=1
-                else:
-                    self.tableWidget_foto.setItem(nus, 0, QTableWidgetItem(str(b.sito)))
+                    # self.tableWidget_foto.setItem(nus, 2, QTableWidgetItem(str(b.us)))    
+                    # nus+=1
+                # else:
+                    # self.tableWidget_foto.setItem(nus, 0, QTableWidgetItem(str(b.sito)))
                     
-                    self.tableWidget_foto.setItem(nus, 1, QTableWidgetItem(str(b.area)))
+                    # self.tableWidget_foto.setItem(nus, 1, QTableWidgetItem(str(b.area)))
                     
-                    self.tableWidget_foto.setItem(nus, 3, QTableWidgetItem(str(b.d_stratigrafica)))
+                    # self.tableWidget_foto.setItem(nus, 3, QTableWidgetItem(str(b.d_stratigrafica)))
                     
-                    self.tableWidget_foto.setItem(nus, 2, QTableWidgetItem(str(b.us)))    
-                    nus+=1 
-        except:
-            pass
+                    # self.tableWidget_foto.setItem(nus, 2, QTableWidgetItem(str(b.us)))    
+                    # nus+=1 
+        # except:
+            # pass
                 
         # search_dict = {
             # 'id_entity': "'" + str(eval("self.DATA_LIST[int(self.REC_CORR)]." + self.ID_TABLE)) + "'",
@@ -1741,12 +1835,12 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     ret, frame = capture.read()
                     if bool(ret):
                    
-                        cv2.imshow('Frame',frame)
+                        cv2.imshow('Pyarchinit Video Frame',frame)
                         if cv2.waitKey(25) & 0xFF == ord('q') :
                        
                             break
                     else:
-                        break#cv2.imshow('frame',frame)
+                        break
                 capture.release()
                 cv2.destroyAllWindows()
             elif bool(res_2):
@@ -2900,22 +2994,22 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         if self.DATA_LIST:
             if self.data_error_check() == 1:
                 pass
-            else:
-                if self.BROWSE_STATUS == "b":
-                    if self.DATA_LIST:
-                        if self.records_equal_check() == 1:
-                            if self.L=='it':
-                                self.update_if(QMessageBox.warning(self, 'Errore',
-                                                                   "Il record e' stato modificato. Vuoi salvare le modifiche?",QMessageBox.Ok | QMessageBox.Cancel))
-                            elif self.L=='de':
-                                self.update_if(QMessageBox.warning(self, 'Error',
-                                                                   "Der Record wurde geändert. Möchtest du die Änderungen speichern?",
-                                                                   QMessageBox.Ok | QMessageBox.Cancel))
+            # else:
+                # if self.BROWSE_STATUS == "b":
+                    # if self.DATA_LIST:
+                        # if self.records_equal_check() == 1:
+                            # if self.L=='it':
+                                # self.update_if(QMessageBox.warning(self, 'Errore',
+                                                                   # "Il record e' stato modificato. Vuoi salvare le modifiche?",QMessageBox.Ok | QMessageBox.Cancel))
+                            # elif self.L=='de':
+                                # self.update_if(QMessageBox.warning(self, 'Error',
+                                                                   # "Der Record wurde geändert. Möchtest du die Änderungen speichern?",
+                                                                   # QMessageBox.Ok | QMessageBox.Cancel))
                                                                    
-                            else:
-                                self.update_if(QMessageBox.warning(self, 'Error',
-                                                                   "The record has been changed. Do you want to save the changes?",
-                                                                   QMessageBox.Ok | QMessageBox.Cancel))
+                            # else:
+                                # self.update_if(QMessageBox.warning(self, 'Error',
+                                                                   # "The record has been changed. Do you want to save the changes?",
+                                                                   # QMessageBox.Ok | QMessageBox.Cancel))
         if self.BROWSE_STATUS != "n":
             self.BROWSE_STATUS = "n"
             self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
@@ -2936,7 +3030,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             self.label_status.setText(self.STATUS_ITEMS[self.BROWSE_STATUS])
             self.set_rec_counter('', '')
             self.label_sort.setText(self.SORTED_ITEMS["n"])
-            self.empty_fields()
+            #self.empty_fields()
 
             self.enable_button(0)
 
@@ -2977,7 +3071,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 test_insert = self.insert_new_rec()
                 if test_insert == 1:
                     self.empty_fields()
-                    self.SORT_STATUS = "o"
+                    self.SORT_STATUS = "n"
                     self.label_sort.setText(self.SORTED_ITEMS[self.SORT_STATUS])
                     self.charge_records()
                     self.charge_list()
@@ -5179,7 +5273,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 self.loadMapPreview()
             if self.toolButtonPreviewMedia.isChecked():
                 self.loadMediaPreview()
-                self.loadMedialist()
+                #self.loadMedialist()
                 
         except: #Exception as e:
             pass #QMessageBox.warning(self, "Errore Fills Fields", str(e), QMessageBox.Ok)
