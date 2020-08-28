@@ -1195,14 +1195,15 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             rowSelected = self.table.currentIndex()#eval(rowSelected_cmd)
             rowIndex = rowSelected.row()
 
-            sito = str(self.comboBox_sito.currentText())
-            area = str(self.comboBox_area.currentText())
+            sito_item = self.table.model().index(rowIndex,1)
+            area_item = self.table.model().index(rowIndex,2)
             #us = str(self.lineEdit_us.text())
             
             us_item = self.table.model().index(rowIndex,3)
             #for i in us_item:
                 
-            
+            sito =self.table.model().data(sito_item)
+            area= self.table.model().data(area_item)
             us = self.table.model().data(us_item)
             f = open("C:\\Users\\Utente\\data_insert_list.txt", "w")
             f.write(str(us))
