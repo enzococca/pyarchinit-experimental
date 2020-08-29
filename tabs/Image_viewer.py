@@ -20,6 +20,7 @@
 '''
 from __future__ import absolute_import
 import os
+from os import startfile
 import time
 import sys
 from builtins import range
@@ -27,7 +28,8 @@ from builtins import str
 import PIL as Image
 from PIL import *
 import shutil
-#import ffmpeg
+
+
 import cv2
 import numpy as np
 from qgis import PyQt
@@ -850,6 +852,8 @@ class Main(QDialog,MAIN_DIALOG_CLASS):
         table_row_count = eval(table_row_count_cmd)
         cmd = ("%s.removeRow") % (table_name)
         eval(cmd)    
+    # def nothing(self,x):
+        # pass
     def openWide_image(self):
         items = self.iconListWidget.selectedItems()
         conn = Connection()
@@ -862,46 +866,27 @@ class Main(QDialog,MAIN_DIALOG_CLASS):
             search_dict = {'media_filename': "'" + str(id_orig_item) + "'" , 'mediatype': "'" + 'video' + "'"} 
             u = Utility()
             search_dict = u.remove_empty_items_fr_dict(search_dict)
-            #try:
+            
             res = self.DB_MANAGER.query_bool(search_dict, "MEDIA_THUMB")
             
             
             search_dict_2 = {'media_filename': "'" + str(id_orig_item) + "'" , 'mediatype': "'" + 'image' + "'"}  
             
             search_dict_2 = u.remove_empty_items_fr_dict(search_dict_2)
-            #try:
+            
             res_2 = self.DB_MANAGER.query_bool(search_dict_2, "MEDIA_THUMB")
             
             search_dict_3 = {'media_filename': "'" + str(id_orig_item) + "'"}  
             
             search_dict_3 = u.remove_empty_items_fr_dict(search_dict_3)
-            #try:
+            
             res_3 = self.DB_MANAGER.query_bool(search_dict_3, "MEDIA_THUMB")
             
-            # file_path = str(res[0].path_resize)
-            # file_path_2 = str(res_2[0].path_resize)
             file_path_3 = str(res_3[0].path_resize)
             if bool(res):
             
-                #except Exception as e:
-                #    QMessageBox.warning(self, "Error", "Warning 1 file: "+ str(e),  QMessageBox.Ok)
-                
-                capture = cv2.VideoCapture(str(thumb_resize_str+file_path_3))
-                print (" Error Opening Video")
-                
-                #ret, frame = cap.read()
-                while(capture.isOpened()):
-                    ret, frame = capture.read()
-                    if bool(ret):
-                   
-                        cv2.imshow('Frame',frame)
-                        if cv2.waitKey(25) & 0xFF == ord('q') :
-                       
-                            break
-                    else:
-                        break#cv2.imshow('frame',frame)
-                capture.release()
-                cv2.destroyAllWindows()
+                os.startfile(str(thumb_resize_str+file_path_3))
+            
             elif bool(res_2):
                 dlg.show_image(str(thumb_resize_str+file_path_3))  
                 dlg.exec_()

@@ -876,13 +876,13 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     s = re.sub("[\W_] +", "", s)
                     filter_str = "{} LIKE '%{}%' and sito = '{}'".format(s_field,s,str(self.comboBox_sito.currentText())) 
                     self.model.setFilter(filter_str)
-                    
+                    self.model_a.select() 
                 else:
                     s_field = self.field.currentText()
                     s = re.sub("[\W_] +", "", s)
                     filter_str = "{} LIKE '%{}%'".format(s_field,s) 
                     self.model.setFilter(filter_str)
-                
+                    self.model_a.select() 
             except Exception as e:
                 QMessageBox.warning(self, "Attenzione", str(e), QMessageBox.Ok)
                 
@@ -892,15 +892,21 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             
                     s_field = self.field.currentText()
                     s = re.sub("[\W_] +", "", s)
-                    filter_str = "{} LIKE '%{}%' and sito = '{}'".format(s_field,s,str(self.comboBox_sito.currentText())) 
-                    self.model_a.setFilter(filter_str)
-                    
+                    filter_str = "{} LIKE '%{}%' and sito = '{}'".format(s_field,s,str(self.comboBox_sito.currentText()))
+                    if bool(filter_str):
+                        self.model_a.setFilter(filter_str)
+                        self.model_a.select()
+                    else:
+                        pass
                 else:
                     s_field = self.field.currentText()
                     s = re.sub("[\W_] +", "", s)
                     filter_str = "{} LIKE '%{}%'".format(s_field,s) 
-                    self.model_a.setFilter(filter_str)
-                
+                    if bool(filter_str):
+                        self.model_a.setFilter(filter_str)
+                        self.model_a.select() 
+                    else:
+                        pass
             except Exception as e:
                 QMessageBox.warning(self, "Attenzione", str(e), QMessageBox.Ok)
         
@@ -1824,26 +1830,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             # file_path_2 = str(res_2[0].path_resize)
             file_path_3 = str(res_3[0].path_resize)
             if bool(res):
-            
-                #except Exception as e:
-                #    QMessageBox.warning(self, "Error", "Warning 1 file: "+ str(e),  QMessageBox.Ok)
-                
-                capture = cv2.VideoCapture(str(thumb_resize_str+file_path_3))
-                print (" Error Opening Video")
-                
-                #ret, frame = cap.read()
-                while(capture.isOpened()):
-                    ret, frame = capture.read()
-                    if bool(ret):
-                   
-                        cv2.imshow('Pyarchinit Video Frame',frame)
-                        if cv2.waitKey(25) & 0xFF == ord('q') :
-                       
-                            break
-                    else:
-                        break
-                capture.release()
-                cv2.destroyAllWindows()
+                os.startfile(str(thumb_resize_str+file_path_3))
             elif bool(res_2):
                 dlg.show_image(str(thumb_resize_str+file_path_3))  
                 dlg.exec_()
@@ -2181,7 +2168,8 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
 
         responsabile_us_vl.sort()
         self.comboBox_responsabile_us.addItems(responsabile_us_vl)
-    
+        
+        
     def msg_sito(self):
         conn = Connection()
         

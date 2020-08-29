@@ -1055,26 +1055,7 @@ class pyarchinit_Inventario_reperti(QDialog, MAIN_DIALOG_CLASS):
             # file_path_2 = str(res_2[0].path_resize)
             file_path_3 = str(res_3[0].path_resize)
             if bool(res):
-            
-                #except Exception as e:
-                #    QMessageBox.warning(self, "Error", "Warning 1 file: "+ str(e),  QMessageBox.Ok)
-                
-                capture = cv2.VideoCapture(str(thumb_resize_str+file_path_3))
-                print (" Error Opening Video")
-                
-                #ret, frame = cap.read()
-                while(capture.isOpened()):
-                    ret, frame = capture.read()
-                    if bool(ret):
-                   
-                        cv2.imshow('Frame',frame)
-                        if cv2.waitKey(25) & 0xFF == ord('q') :
-                       
-                            break
-                    else:
-                        break#cv2.imshow('frame',frame)
-                capture.release()
-                cv2.destroyAllWindows()
+                os.startfile(str(thumb_resize_str+file_path_3))
             elif bool(res_2):
                 dlg.show_image(str(thumb_resize_str+file_path_3))  
                 dlg.exec_()
