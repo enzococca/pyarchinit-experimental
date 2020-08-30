@@ -786,7 +786,8 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
         self.msg_sito()
         self.set_sito()
         self.show()
-        #self.loadMedialist()
+        self.listview_us()
+    def listview_us(self):    #self.loadMedialist()
         conn = Connection()
         conn_str = conn.conn_str()
         conn_sqlite = conn.databasename()
@@ -810,16 +811,18 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             db1.setDatabaseName(sqlite_DB_path +os.sep+ conn_sqlite["db_name"])
             db1.open()
             #self.table = QTableView() 
-            self.model = QSqlTableModel(db = db1) 
-            self.table.setModel(self.model) 
-            self.model.setTable("us_table") 
+            self.model_a = QSqlTableModel(db = db1) 
+            
+            self.table.setModel(self.model_a) 
+            self.model_a.setTable("us_table") 
+            self.model_a.setEditStrategy(QSqlTableModel.OnManualSubmit)
             column_titles = { 
                 "sito": "SITO", 
                 "area": "Area", 
                 "us": "US"} 
             for n, t in column_titles.items(): 
-                idx = self.model.fieldIndex( n) 
-                self.model.setHeaderData( idx, Qt.Horizontal, t)
+                idx = self.model_a.fieldIndex( n) 
+                self.model_a.setHeaderData( idx, Qt.Horizontal, t)
 
             #self.model.removeColumns(0,1 and 2,3)
             # columns_to_remove = ['id_us'] 
@@ -828,11 +831,11 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                 # self.model.removeColumns(idx, 1)
             if bool (sito_set_str):
                 filter_str = "sito = '{}'".format(str(self.comboBox_sito.currentText())) 
-                self.model.setFilter(filter_str)
-                self.model.select() 
+                self.model_a.setFilter(filter_str)
+                self.model_a.select() 
             else:
             
-                self.model.select() 
+                self.model_a.select() 
                
         else:
            
@@ -851,17 +854,29 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
            
             self.table.setModel(self.model_a) 
             self.model_a.setTable("us_table")
-            
+            self.model_a.setEditStrategy(QSqlTableModel.OnManualSubmit)
+            self.pushButton_submit.clicked.connect(self.submit)
+            self.pushButton_revert.clicked.connect(self.model_a.revertAll)
+        
             if bool (sito_set_str):
                 filter_str = "sito = '{}'".format(str(self.comboBox_sito.currentText())) 
                 self.model_a.setFilter(filter_str)
-                self.model_a.select() 
+                self.model_a.select()
+                             
             else:
                 self.model_a.select() 
-            
+                
             
                
-        
+    def submit(self):
+        self.model_a.database().transaction()
+        if self.model_a.submitAll():
+            self.model_a.database().commit()
+            QMessageBox.information(self, "Record",  "record salvato")
+        else:
+            self.model_a.database().rollback()
+            QMessageBox.warning(self, "Cached Table",
+                        "The database reported an error: %s" % self.model_a.lastError().text())    
     def update_filter(self, s): 
         conn = Connection()
         conn_str = conn.conn_str()    
@@ -875,18 +890,18 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                     s_field = self.field.currentText()
                     s = re.sub("[\W_] +", "", s)
                     filter_str = "{} LIKE '%{}%' and sito = '{}'".format(s_field,s,str(self.comboBox_sito.currentText())) 
-                    self.model.setFilter(filter_str)
-                    self.model_a.select() 
+                    self.model_a.setFilter(filter_str)
+                    
                 else:
                     s_field = self.field.currentText()
                     s = re.sub("[\W_] +", "", s)
                     filter_str = "{} LIKE '%{}%'".format(s_field,s) 
-                    self.model.setFilter(filter_str)
-                    self.model_a.select() 
+                    self.model_a.setFilter(filter_str)
+                    
             except Exception as e:
                 QMessageBox.warning(self, "Attenzione", str(e), QMessageBox.Ok)
                 
-        elif test_conn != 0:
+        else:
             try:
                 if bool(sito_set_str):
             
@@ -1190,10 +1205,7 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
                                 QMessageBox.Ok)                 
     
     def on_pushButton_go_to_scheda_pressed(self):
-        if self.L=='it':
-            QMessageBox.warning(self, "ATTENZIONE", "Se hai modificato il record e non lo hai salvato perderai il dato. Salvare?", QMessageBox.Ok | QMessageBox.Cancel)
-        else:
-            QMessageBox.warning(self, "Warning", "If you changed the record and didn't save it, you'll lose the record. Do you want save it?", QMessageBox.Ok | QMessageBox.Cancel)
+        
         
         try:
             #table_name = "self.table"
