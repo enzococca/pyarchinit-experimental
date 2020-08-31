@@ -816,6 +816,8 @@ class pyarchinit_US(QDialog, MAIN_DIALOG_CLASS):
             self.table.setModel(self.model_a) 
             self.model_a.setTable("us_table") 
             self.model_a.setEditStrategy(QSqlTableModel.OnManualSubmit)
+            self.pushButton_submit.clicked.connect(self.submit)
+            self.pushButton_revert.clicked.connect(self.model_a.revertAll)
             column_titles = { 
                 "sito": "SITO", 
                 "area": "Area", 
