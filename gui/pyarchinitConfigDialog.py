@@ -38,7 +38,7 @@ from sqlalchemy import create_engine
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtCore import  pyqtSlot, pyqtSignal,QThread,QUrl
 from qgis.PyQt.QtWidgets import QApplication, QDialog, QMessageBox, QFileDialog,QLineEdit,QWidget
-
+from qgis.PyQt.QtSql import *
 from qgis.PyQt.uic import loadUiType
 from qgis.core import QgsApplication, QgsSettings, QgsProject
 
@@ -85,13 +85,17 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         self.load_dict()
         self.charge_data()
         self.db_active()
+        self.comboBox_sito.currentIndexChanged.connect(self.summary)
         self.comboBox_Database.currentIndexChanged.connect(self.db_active)
         self.comboBox_Database.currentIndexChanged.connect(self.set_db_parameter)
+        #self.comboBox_Database.currentTextChanged.connect(self.summary) and self.lineEdit_password.textChanged.connect (self.summary)
+        
         self.comboBox_server_rd.editTextChanged.connect(self.set_db_import_from_parameter)
         self.comboBox_server_wt.editTextChanged.connect(self.set_db_import_to_parameter)
         #self.active()
-        #self.toolButton_active.clicked.connect(self.active)
+        self.pushButton_save.clicked.connect(self.summary)
         self.pushButton_save.clicked.connect(self.on_pushButton_save_pressed)
+        
         self.pushButtonGraphviz.clicked.connect(self.setPathGraphviz)
         self.pbnSaveEnvironPath.clicked.connect(self.setEnvironPath)
         self.toolButton_thumbpath.clicked.connect(self.setPathThumb)
@@ -128,9 +132,82 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         
         self.selectorCrsWidget.setCrs(QgsProject.instance().crs())
         self.selectorCrsWidget_sl.setCrs(QgsProject.instance().crs())
+        #self.summary()
+    def summary(self):
+        self.comboBox_Database.update()
+        conn = Connection()
+        conn_str = conn.conn_str()
+        conn_sqlite = conn.databasename()
+        conn_user = conn.datauser()
+        conn_host = conn.datahost()
+        conn_port = conn.dataport()
+        port_int  = conn_port["port"]
+        port_int.replace("'", "")
+        #QMessageBox.warning(self, "Attenzione", port_int, QMessageBox.Ok)
+        conn_password = conn.datapassword()
+        
+        
+        sito_set= conn.sito_set()
+        sito_set_str = sito_set['sito_set']
+        
+        test_conn = conn_str.find('sqlite')
+        if test_conn == 0:
+            sqlite_DB_path = '{}{}{}'.format(self.HOME, os.sep,
+                                           "pyarchinit_DB_folder") 
+            db = QSqlDatabase("QSQLITE") 
+            db.setDatabaseName(sqlite_DB_path +os.sep+ conn_sqlite["db_name"])
+            db.open()
+            #self.table = QTableView() 
+            self.model_a = QSqlQueryModel() 
+            
+            self.tableView_summary.setModel(self.model_a) 
+            if bool(self.comboBox_sito.currentText()):
+                query = QSqlQuery("select distinct a.sito as 'Sito',case when count( distinct a.us)=0  then 'US/USM mancanti' else  count( distinct a.us)  end as 'Totale US/USM',case when count(distinct b.numero_inventario)=0 then 'No Materiali' else count(distinct b.numero_inventario)end as 'Totale Materiali',case when count(distinct c.id_struttura)=0 then 'No Strutture' else count(distinct c.id_struttura)end as 'Totale strutture',case when count(distinct d.id_tafonomia)=0 then 'No Tombe' else count(distinct d.id_tafonomia)end as 'Totale tombe' from us_table as a left join inventario_materiali_table as b on a.sito=b.sito left join struttura_table as c on a.sito=c.sito left join tafonomia_table as d on a.sito=d.sito where a.sito = '{}'".format(str(self.comboBox_sito.currentText())), db=db)
+                self.model_a.setQuery(query)
+            else:
+                query1 = QSqlQuery("select distinct a.sito as 'Sito',case when count( distinct a.us)=0  then 'US/USM mancanti' else  count( distinct a.us)  end as 'Totale US/USM',case when count(distinct b.numero_inventario)=0 then 'No Materiali' else count(distinct b.numero_inventario)end as 'Totale Materiali',case when count(distinct c.id_struttura)=0 then 'No Strutture' else count(distinct c.id_struttura)end as 'Totale strutture',case when count(distinct d.id_tafonomia)=0 then 'No Tombe' else count(distinct d.id_tafonomia)end as 'Totale tombe' from us_table as a left join inventario_materiali_table as b on a.sito=b.sito left join struttura_table as c on a.sito=c.sito left join tafonomia_table as d on a.sito=d.sito group by a.sito;",db=db)
+                self.model_a.setQuery(query1)
+            
+
+
+            #self.model_a.setTable("us_table") 
+            #self.model_a.setEditStrategy(QSqlTableModel.OnManualSubmit)
+            
+            # if bool (sito_set_str):
+                # filter_str = "sito = '{}'".format(str(self.comboBox_sito.currentText())) 
+                # self.model_a.setFilter(filter_str)
+                # self.model_a.select() 
+            # else:
+            
+                # self.model_a.select() 
+            self.tableView_summary.clearSpans()  
+        else:
+           
+            db = QSqlDatabase.addDatabase("QPSQL")
+            db.setHostName(conn_host["host"])
+                        
+            db.setDatabaseName(conn_sqlite["db_name"])
+            db.setPort(int(port_int))
+            db.setUserName(conn_user['user'])
+            db.setPassword(conn_password['password']) 
+            db.open()
+            
+            
+                
+            self.model_a = QSqlQueryModel() 
+            
+            self.tableView_summary.setModel(self.model_a) 
+            if bool(self.comboBox_sito.currentText()):
+                query = QSqlQuery("select distinct  a.sito as Sito ,count(distinct a.id_us) as us,count(distinct c.id_struttura)as Struttura,count(distinct d.id_tafonomia) as Tombe from us_table as a left join struttura_table as c on a.sito=c.sito left join tafonomia_table as d on a.sito=d.sito where a.sito = '{}' group by a.sito order by us DESC ".format(str(self.comboBox_sito.currentText())), db=db)
+                self.model_a.setQuery(query)
+            else:
+                query1 = QSqlQuery("select distinct  a.sito as Sito ,count(distinct a.id_us) as us,count(distinct c.id_struttura)as Struttura,count(distinct d.id_tafonomia) as Tombe from us_table as a left join struttura_table as c on a.sito=c.sito left join tafonomia_table as d on a.sito=d.sito group by a.sito order by us DESC ",db=db)
+                self.model_a.setQuery(query1) 
+                
     
     def db_active (self):
         self.comboBox_Database.update()
+        self.comboBox_sito.clear()
         if self.comboBox_Database.currentText() == 'sqlite':
             #self.comboBox_Database.editTextChanged.connect(self.set_db_parameter)
             self.toolButton_db.setEnabled(True)
@@ -141,6 +218,7 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
             self.toolButton_db.setEnabled(False)
             self.pushButton_upd_sqlite.setEnabled(False)
             self.pushButton_upd_postgres.setEnabled(True)
+        self.comboBox_sito.clear()
     def setPathDBsqlite1(self):
         s = QgsSettings()
         dbpath = QFileDialog.getOpenFileName(
@@ -331,6 +409,7 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
         f.close()
 
     def on_pushButton_save_pressed(self):
+        
         try:
             if not bool(self.lineEdit_Password.text()) and str(self.comboBox_Database.currentText())=='postgres':
                 QMessageBox.warning(self, "INFO", 'non dimenticarti di inserire la password',QMessageBox.Ok)
@@ -859,6 +938,7 @@ class pyArchInitDialog_Config(QDialog, MAIN_DIALOG_CLASS):
   
 
     def try_connection(self):
+        self.summary()
         conn = Connection()
         conn_str = conn.conn_str()
 
